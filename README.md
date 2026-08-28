@@ -14,12 +14,12 @@
 
 ## 📊 Acesso Rápido aos Dados
 
-| 🗂️ **Tabela** | 📝 **Descrição** | 🔗 **Download** |
-| --- | --- | --- |
-| **Bases Inscrição Creche** | Módulo de inscrição e classificação para alunos de creche | [📥 Download](https://drive.google.com/drive/folders/17WJX5iVLxn0uK9dlQoGugQWLCKmxBnMM?usp=sharing) |
-| **Oferecimento e Vagas** | Dados anteriores com as vagas ofertadas e alunos inscritos por unidades parceiras e públicas | [📥 Download](https://drive.google.com/drive/folders/1cCOQMwfbGTRWMlAKIU4bU4BK1JV7IUNz?usp=sharing) |
-| **Microáreas SME/IPP** | Bases para a criação de mapas com a dinâmica territorial usada pela SME | [📥 Download](https://drive.google.com/drive/folders/1xMgfHz2rkPt96WuAohEfokIjyJTuHWAK?usp=sharing) |
-| **Nascidos Vivos RJ** | Base de nascidos vivos no município, usada como referência de demanda potencial | [📥 Download](https://docs.google.com/spreadsheets/d/1TXFEJMcA0JRKCndkmeesryLSKxDySRGG/edit?usp=sharing) |
+| 🗂️ **Tabela** | 📝 **Descrição** |
+| --- | --- |
+| **Bases Inscrição Creche** | Módulo de inscrição e classificação para alunos de creche |
+| **Oferecimento e Vagas** | Dados anteriores com as vagas ofertadas e alunos inscritos por unidades parceiras e públicas |
+| **Microáreas SME/IPP** | Bases para a criação de mapas com a dinâmica territorial usada pela SME |
+| **Nascidos Vivos RJ** | Base de nascidos vivos no município, usada como referência de demanda potencial |
 
 ---
 
