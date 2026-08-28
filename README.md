@@ -29,25 +29,6 @@ Todas as bases estão neste repositório. Basta clonar.
 
 - Apresentação: [Acessar](https://docs.google.com/presentation/d/183Pq5Mz2FYAY-0cI9RvuxW94zh-cundQ/edit?usp=sharing)
 - Briefing (problema completo): [Acessar](https://docs.google.com/document/d/1jZenYEKR2hJOVrxLXWM0xjxmoiohAqEl/edit?usp=sharing)
----
-
-## 🎯 O Desafio
-
-## Educação pública: Inteligência na Fila da Creche
-
-O paradoxo é claro: de um lado, vagas ociosas nas creches da rede pública; de outro, famílias em listas de espera expressivas.
-
-Um único processo de Inscrição Creche da SME-Rio reúne mais de 45 mil inscrições, distribuídas por 872 unidades entre creches e EDIs — cada família indicando até cinco opções por ordem de preferência. Entre a inscrição e a matrícula existem três fases de retaguarda geridas manualmente pelas 11 Coordenadorias Regionais de Educação:
-
-- o **planejamento da oferta**, que ainda se apoia na fila do ano anterior;
-- a **classificação**, ordenada por uma régua de pontuação redefinida a cada processo;
-- a **convocação**, feita por telefone, e-mail e WhatsApp sem rastreio, sem painel que mostre há quanto tempo uma vaga aguarda confirmação.
-
-A fila, portanto, não é de escassez — é de descompasso entre oferta e demanda por território e turno.
-
-### O que esperamos dos times
-
-Transformar cinco anos de dados reais (2021–2025) em inteligência acionável que responda: quantas vagas abrir e onde, em que ordem chamar a fila e como garantir que a família chegue à vaga dentro do prazo — otimizando, ao mesmo tempo, o processo de classificação e convocação.
 
 ---
 
