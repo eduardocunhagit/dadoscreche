@@ -25,7 +25,7 @@
 
 ## 📚 Materiais de Apoio
 
-- Apresentação: [Acessar]([https://docs.google.com/presentation/d/1Teh1Al1ZPaymLhTAd9-ZyVkjh02sxnyI/edit?usp=sharing](https://docs.google.com/presentation/d/183Pq5Mz2FYAY-0cI9RvuxW94zh-cundQ/edit?usp=sharing&ouid=118222130256698885795&rtpof=true&sd=true)
+- Apresentação: [Acessar](https://docs.google.com/presentation/d/1Teh1Al1ZPaymLhTAd9-ZyVkjh02sxnyI/edit?usp=sharing](https://docs.google.com/presentation/d/183Pq5Mz2FYAY-0cI9RvuxW94zh-cundQ/edit?usp=sharing&ouid=118222130256698885795&rtpof=true&sd=true)
 - Briefing (problema completo): [Acessar](https://docs.google.com/document/d/1jZenYEKR2hJOVrxLXWM0xjxmoiohAqEl/edit?usp=sharing)
 
 ---
