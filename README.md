@@ -55,7 +55,7 @@ Transformar cinco anos de dados reais (2021–2025) em inteligência acionável 
 
 ## 📘 Dicionário de Dados
 
-> _[PREENCHER] Adicionar aqui a estrutura de tabelas e colunas de cada base (nome da coluna, tipo, descrição) e o diagrama de relacionamento entre elas, como no exemplo do repositório de Saúde._
+> _[(https://docs.google.com/document/d/16R9d-eNme3XgvoZocOeDCnR8g6xNecEi/edit?usp=drive_link&ouid=118222130256698885795&rtpof=true&sd=true)] 
 
 ---
 
