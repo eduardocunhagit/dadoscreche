@@ -35,6 +35,31 @@ Para gerar o CSV no disco: `gunzip -k 01_QueryA_InscricoesPorAno.csv.gz`.
 
 Os arquivos usam separador `;`, codificação UTF-8 com BOM.
 
+## Antes de começar
+
+Duas armadilhas comuns com a `02_QueryB`:
+
+**O Excel não dá conta desta base.** Ele não abre `.csv.gz` (é preciso descompactar antes),
+e mesmo descompactada a QueryB tem 4.357.119 linhas — acima do teto do Excel, que é
+1.048.576 linhas. O arquivo abriria truncado, sem aviso claro. Use Python, R, DuckDB ou
+um banco de dados. A `01_QueryA` tem 837.179 linhas e cabe no Excel, mas ainda assim
+precisa ser descompactada primeiro.
+
+**Carregar a QueryB inteira na memória exige vários GB de RAM.** Isso vale igual para o
+CSV cru: não é efeito da compactação. Em máquinas comuns, leia em blocos e vá agregando:
+
+```python
+import pandas as pd
+
+total = 0
+for bloco in pd.read_csv("02_QueryB_RespostasSocioEconomicas.csv.gz",
+                         sep=";", encoding="utf-8-sig", chunksize=500_000):
+    total += len(bloco)   # troque pelo seu filtro/agregação
+```
+
+Alternativa mais simples: o DuckDB lê o `.gz` direto do disco e só carrega o resultado da
+consulta, sem precisar da base inteira na memória.
+
 ## Anonimização
 
 - **Criança → `aluno_NNNNNNN`**: chave natural = CPF → (se vazio) DNV → (se vazio) NIS → (se vazio) nome normalizado + data de nascimento. O mesmo código é usado em todas as opções de creche e em todos os 5 processos em que a criança aparecer.
