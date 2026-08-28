@@ -49,9 +49,6 @@ A fila, portanto, não é de escassez — é de descompasso entre oferta e deman
 
 Transformar cinco anos de dados reais (2021–2025) em inteligência acionável que responda: quantas vagas abrir e onde, em que ordem chamar a fila e como garantir que a família chegue à vaga dentro do prazo — otimizando, ao mesmo tempo, o processo de classificação e convocação.
 
-📄 [Link para o problema completo](https://docs.google.com/document/d/1jZenYEKR2hJOVrxLXWM0xjxmoiohAqEl/edit?usp=sharing)
-📊 [Link para a apresentação](https://docs.google.com/presentation/d/1Teh1Al1ZPaymLhTAd9-ZyVkjh02sxnyI/edit?usp=sharing)
-
 ---
 
 ## 📘 Dicionário de Dados
