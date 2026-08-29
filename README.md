@@ -27,7 +27,7 @@ Todas as bases estão neste repositório. Basta clonar.
 
 ## 📚 Materiais de Apoio
 
-- Apresentação: [Acessar](https://docs.google.com/presentation/d/183Pq5Mz2FYAY-0cI9RvuxW94zh-cundQ/edit?usp=sharing)
+- Apresentação: [Acessar](https://rioeduca-my.sharepoint.com/:p:/g/personal/gabrielledomingues_rioeduca_net/IQAlvS8n9w7OQ6WcJK2T-wr6AVcXGJuT7MdyJ41qQtqlff0?e=xkQwfk)
 - Briefing (problema completo): [Acessar](https://docs.google.com/document/d/1jZenYEKR2hJOVrxLXWM0xjxmoiohAqEl/edit?usp=sharing)
 
 ---
