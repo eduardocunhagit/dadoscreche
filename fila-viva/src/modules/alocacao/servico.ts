@@ -160,3 +160,119 @@ export async function inconsistenciasDeEstado() {
   });
   return inscricoesComOferta.filter((i) => i.opcoes.some((o) => o.estado === "NA_FILA"));
 }
+
+// ---------------------------------------------------------------------------
+// Inscrição — onde a família escolhe as creches (Fase 3 do plano)
+// ---------------------------------------------------------------------------
+
+/** As 11 CREs, pra popular o seletor de polo do formulário de inscrição. */
+export async function listarPolos() {
+  return prisma.polo.findMany({ orderBy: { plmId: "asc" } });
+}
+
+/** O processo mais recente — o que está "com inscrição aberta" nesta demo. */
+export async function processoVigente() {
+  return prisma.processo.findFirstOrThrow({ orderBy: { ano: "desc" } });
+}
+
+/** Busca por nome ou bairro pro seletor de unidades — sem isso ninguém acha uma escola entre 2 mil. */
+export async function buscarUnidades(termo: string) {
+  const q = termo.trim();
+  if (q.length < 2) return [];
+  return prisma.unidade.findMany({
+    where: {
+      OR: [
+        { nome: { contains: q } },
+        { bairro: { contains: q } },
+        { escCodigo: { contains: q } },
+      ],
+    },
+    orderBy: { nome: "asc" },
+    take: 20,
+  });
+}
+
+export interface EscolhaOpcao {
+  unidadeEscCodigo: string;
+  grupamento: string;
+  turno: string;
+}
+
+export interface DadosNovaInscricao {
+  processoId: string;
+  poloId: string;
+  criancaId: string;
+  responsavelId: string;
+  cepResponsavel?: string | null;
+  bairroResponsavel?: string | null;
+  opcoes: EscolhaOpcao[]; // já na ordem de preferência da família — 1 a 5
+}
+
+/**
+ * Cria a inscrição e suas opções, todas em NA_FILA. Não pontua nem ordena
+ * fila aqui — isso é a Query C aplicada em cima da Query B (Fase 3B, ver
+ * README) e roda separado do motor de alocação.
+ */
+export async function criarInscricao(dados: DadosNovaInscricao) {
+  if (dados.opcoes.length < 1 || dados.opcoes.length > 5) {
+    throw new Error("A inscrição precisa de 1 a 5 opções, na ordem de preferência.");
+  }
+  const codigosUnicos = new Set(dados.opcoes.map((o) => `${o.unidadeEscCodigo}|${o.grupamento}|${o.turno}`));
+  if (codigosUnicos.size !== dados.opcoes.length) {
+    throw new Error("Duas opções não podem repetir a mesma unidade, grupamento e turno.");
+  }
+
+  const jaTemInscricaoNoProcesso = await prisma.inscricao.findFirst({
+    where: { processoId: dados.processoId, criancaId: dados.criancaId },
+  });
+  if (jaTemInscricaoNoProcesso) {
+    throw new Error("Esta criança já tem uma inscrição neste processo seletivo.");
+  }
+
+  const ultima = await prisma.inscricao.findFirst({
+    where: { processoId: dados.processoId, poloId: dados.poloId },
+    orderBy: { iplId: "desc" },
+    select: { iplId: true },
+  });
+
+  return prisma.$transaction(async (tx) => {
+    const inscricao = await tx.inscricao.create({
+      data: {
+        processoId: dados.processoId,
+        poloId: dados.poloId,
+        iplId: (ultima?.iplId ?? 0) + 1,
+        criancaId: dados.criancaId,
+        responsavelId: dados.responsavelId,
+        dataCriacao: new Date(),
+        cepResponsavel: dados.cepResponsavel,
+        bairroResponsavel: dados.bairroResponsavel,
+      },
+    });
+
+    for (const [i, opcao] of dados.opcoes.entries()) {
+      await tx.opcao.create({
+        data: {
+          inscricaoId: inscricao.id,
+          ordem: i + 1,
+          unidadeEscCodigo: opcao.unidadeEscCodigo,
+          grupamento: opcao.grupamento,
+          turno: opcao.turno,
+          estado: "NA_FILA",
+        },
+      });
+    }
+
+    return inscricao;
+  });
+}
+
+export async function listarInscricoesDaCrianca(criancaId: string) {
+  return prisma.inscricao.findMany({
+    where: { criancaId },
+    include: {
+      processo: true,
+      opcoes: { include: { unidade: true }, orderBy: { ordem: "asc" } },
+    },
+    orderBy: { dataCriacao: "desc" },
+  });
+}

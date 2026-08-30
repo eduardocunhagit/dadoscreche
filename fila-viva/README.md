@@ -90,14 +90,27 @@ imprime, sobre a base real do desafio:
 - Quantos cadastros têm um estado inconsistente sem sinalização hoje
   (668) — o gap nº2 do briefing.
 
+## Fluxo de inscrição — onde a família escolhe a creche
+
+`/meus-filhos/[criancaId]/inscrever`: a família busca unidades por nome ou
+bairro, escolhe até 5 em ordem de preferência (reordena, troca grupamento e
+turno por opção), e confirma. Cria a `Inscricao` e as `Opcao` reais, todas
+`NA_FILA` — a partir daí é o motor de alocação (`/fila`) que processa. Um
+botão "+ Nova inscrição" aparece no perfil de cada criança, e o mesmo
+perfil já lista as inscrições existentes com o estado de cada opção.
+
+O que essa tela **não** faz ainda: aplicar a pontuação da Query C no
+momento da inscrição (o questionário socioeconômico) — a fila hoje ordena
+só por `dataCriacao`, não pela régua de pontos do processo. Ver "O que
+ainda falta" abaixo.
+
 ## O que ainda falta (por fase — ver o plano publicado)
 
-- **Fase 3** — fluxo de inscrição em si (as 5 opções sendo escolhidas) e
-  aplicação da pontuação no momento da inscrição. O motor (Fase 4) já lê e
-  grava o estado das opções; falta a tela que cria uma opção nova.
-  Também não fizemos a UI de gestão do catálogo de perguntas.
-- **Fase 3B** — importar a Query B se algum módulo precisar reconstituir
-  o perfil de vulnerabilidade de uma inscrição.
+- **Fase 3B** — questionário socioeconômico no momento da inscrição e
+  aplicação da régua de pontuação (Query C) pra ordenar a fila por pontos,
+  não só por data. Também não fizemos a UI de gestão do catálogo de
+  perguntas. Precisaria importar a Query B se algum módulo quiser
+  reconstituir o perfil de vulnerabilidade de uma inscrição já existente.
 - Convocação de verdade (Eixo 3) — este projeto só abre a **oferta** e
   grava o relógio; disparar WhatsApp/SMS/e-mail de verdade é o módulo de
   outra pessoa do time (ver `EXTENDING.md`).
