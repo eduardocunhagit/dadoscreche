@@ -2,13 +2,21 @@ import { barramento, type NomeEvento } from "@/core/events/bus";
 import type { PapelUsuario } from "@/core/domain/constants";
 import { moduloPerfilContatos } from "./perfil-contatos";
 import { moduloAlocacao } from "./alocacao";
+import { moduloMapaDemanda } from "./mapa-demanda";
 import { moduloExemplo } from "./exemplo";
+import { moduloMensagens } from "./mensagens";
 import type { Modulo, ItemDeMenu } from "./tipos";
 
 // A única linha compartilhada que um módulo novo toca: acrescentar o import
 // acima e o nome na lista abaixo. Nunca editar uma tela ou serviço de outro
 // módulo para se plugar — é para isso que existem menu/widgets/assina.
-export const MODULOS: Modulo[] = [moduloPerfilContatos, moduloAlocacao, moduloExemplo];
+export const MODULOS: Modulo[] = [
+  moduloPerfilContatos,
+  moduloAlocacao,
+  moduloMensagens,
+  moduloMapaDemanda,
+  moduloExemplo,
+];
 
 export function menuParaPapel(papel: PapelUsuario): ItemDeMenu[] {
   return MODULOS.flatMap((m) => m.menu ?? []).filter((item) => item.papeis.includes(papel));

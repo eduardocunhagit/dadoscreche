@@ -9,6 +9,7 @@ import { Selo, SeloEstadoOpcao } from "@/core/ui/Badge";
 import { Botao } from "@/core/ui/Button";
 import { Campo } from "@/core/ui/Input";
 import { FormularioContato } from "./FormularioContato";
+import { SecaoMensagens } from "@/modules/mensagens/SecaoMensagens";
 import { actionDeclararSemAlternativo, actionDesativar, actionEditarValor, actionVerificar } from "./actions";
 
 function formatarData(d: Date | null) {
@@ -158,6 +159,8 @@ export default async function PaginaCrianca(props: PageProps<"/meus-filhos/[cria
           ))}
         </CartaoCorpo>
       </Cartao>
+
+      {user.papel !== "RESPONSAVEL" && <SecaoMensagens criancaId={criancaId} />}
 
       {podeEditar && (
         <Cartao>

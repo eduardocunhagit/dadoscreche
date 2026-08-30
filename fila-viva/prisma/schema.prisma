@@ -295,3 +295,42 @@ model Resposta {
 
   @@unique([inscricaoId, perguntaId])
 }
+
+// ---------------------------------------------------------------------------
+// WhatsApp demo messaging module
+// ---------------------------------------------------------------------------
+
+// These satellite tables intentionally keep scalar references to core records.
+// The module can evolve without adding fields to Crianca, Contato, or Usuario.
+model MsgConversa {
+  id           String   @id @default(cuid())
+  criancaId    String
+  contatoId    String
+  nomeContato  String
+  telefone     String
+  status       String   @default("ENVIADA") // ENVIADA | RESPONDIDA | ERRO
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  mensagens MsgMensagem[]
+
+  @@unique([criancaId, contatoId])
+  @@index([criancaId])
+  @@map("msg_conversa")
+}
+
+model MsgMensagem {
+  id               String      @id @default(cuid())
+  conversaId       String
+  conversa         MsgConversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  direcao          String // SAIDA | ENTRADA
+  conteudo         String
+  status           String // ENVIADA | RECEBIDA | ERRO
+  autorUsuarioId   String?
+  classificacao    String?
+  sugestaoResposta String?
+  criadaEm         DateTime    @default(now())
+
+  @@index([conversaId, criadaEm])
+  @@map("msg_mensagem")
+}
