@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Script CommonJS puro, roda via `node` no postinstall antes de
+    // qualquer coisa do app existir — de propósito fora do mundo TS/ESM
+    // do resto do projeto.
+    "scripts/setup-env.cjs",
   ]),
 ]);
 
