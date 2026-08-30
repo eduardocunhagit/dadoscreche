@@ -24,8 +24,15 @@ arquivo SQLite (`dev.db`), criado na hora.
 ```bash
 npm install
 npm run db:migrate     # cria dev.db e aplica o schema
-npm run db:seed        # importa dados REAIS das CSVs do desafio + contas de demo
+npm run db:seed        # importa dados REAIS das CSVs do desafio + contas de demo — ~30s
 npm run dev             # http://localhost:3000
+```
+
+Você vai precisar criar um `.env` na raiz de `fila-viva/` (não vem no git):
+
+```
+DATABASE_URL="file:./dev.db"
+AUTH_SECRET="qualquer-string-aleatoria-de-32-caracteres-aqui"
 ```
 
 Contas de demonstração (senha `demo1234` para todas):
