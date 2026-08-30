@@ -28,9 +28,10 @@ import { parse } from "csv-parse/sync";
 import { prisma } from "../src/core/db/client";
 
 const RAIZ_DADOS = path.resolve(__dirname, "..", "..");
+// Pasta renomeada de "frente2" para "pipeline_demanda" no PR #11.
 const ARQUIVO_GAP = path.join(
   RAIZ_DADOS,
-  "frente2",
+  "pipeline_demanda",
   "06_resultados",
   "arquivos_gerados",
   "gap_demanda_efetiva_2026.csv"
