@@ -3,7 +3,7 @@ import { auth } from "@/core/auth";
 import { prisma } from "@/core/db/client";
 import { Cartao, CartaoCorpo } from "@/core/ui/Card";
 import { PAPEIS_USUARIO_LABEL } from "@/core/domain/constants";
-import { listarCriancasDoResponsavel, filaDeRevalidacao } from "@/modules/perfil-contatos";
+import { listarCriancasDoResponsavel, contarFilaDeRevalidacao } from "@/modules/perfil-contatos";
 import { ofertasEmAberto, inconsistenciasDeEstado } from "@/modules/alocacao";
 import { widgetsDoSlot } from "@/modules/registry";
 
@@ -93,9 +93,9 @@ export default async function PaginaInicial() {
         ? { poloId: user.poloId ?? undefined }
         : {};
 
-  const [ofertas, revalidar, inconsistentes, totalNaFila] = await Promise.all([
+  const [ofertas, totalRevalidar, inconsistentes, totalNaFila] = await Promise.all([
     ofertasEmAberto(escopo),
-    filaDeRevalidacao(escopo),
+    contarFilaDeRevalidacao(escopo),
     inconsistenciasDeEstado(),
     prisma.opcao.count({ where: { estado: "NA_FILA" } }),
   ]);
@@ -117,7 +117,7 @@ export default async function PaginaInicial() {
           numero={ofertaMaisAntiga !== null ? `${ofertaMaisAntiga}d` : "—"}
           rotulo="Oferta aberta há mais tempo"
         />
-        <Estatistica numero={revalidar.length} rotulo="Crianças com contato a revalidar" />
+        <Estatistica numero={totalRevalidar} rotulo="Crianças com contato a revalidar" />
         <Estatistica numero={inconsistentes.length} rotulo="Cadastros com estado inconsistente" />
       </div>
 

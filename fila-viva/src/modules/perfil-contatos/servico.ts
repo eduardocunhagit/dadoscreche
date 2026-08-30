@@ -173,29 +173,44 @@ export async function declararSemContatoAlternativo(criancaId: string, declarado
   });
 }
 
-/** Fila de trabalho da CRE: contatos nunca verificados ou vencidos há mais de `meses`. */
-export async function filaDeRevalidacao(opts: { poloId?: string; unidadeEscCodigo?: string; meses?: number }) {
+function whereFilaDeRevalidacao(opts: { poloId?: string; unidadeEscCodigo?: string; meses?: number }) {
   const limite = new Date();
   limite.setMonth(limite.getMonth() - (opts.meses ?? 6));
 
-  const criancas = await prisma.crianca.findMany({
-    where: {
-      inscricoes: opts.poloId
-        ? { some: { poloId: opts.poloId } }
-        : opts.unidadeEscCodigo
-          ? { some: { opcoes: { some: { unidadeEscCodigo: opts.unidadeEscCodigo } } } }
-          : undefined,
-      contatos: { some: { ativo: true, OR: [{ verificadoEm: null }, { verificadoEm: { lt: limite } }] } },
-    },
+  return {
+    inscricoes: opts.poloId
+      ? { some: { poloId: opts.poloId } }
+      : opts.unidadeEscCodigo
+        ? { some: { opcoes: { some: { unidadeEscCodigo: opts.unidadeEscCodigo } } } }
+        : undefined,
+    contatos: { some: { ativo: true, OR: [{ verificadoEm: null }, { verificadoEm: { lt: limite } }] } },
+  };
+}
+
+const TAMANHO_FILA_DE_REVALIDACAO = 200;
+
+/**
+ * Fila de trabalho da CRE: contatos nunca verificados ou vencidos há mais de
+ * `meses`. Limitada a `TAMANHO_FILA_DE_REVALIDACAO` — sem isso, o include
+ * aninhado (contatos + inscrições de cada criança) estoura o teto de
+ * parâmetros por consulta do SQLite quando o escopo é a rede inteira.
+ */
+export async function filaDeRevalidacao(opts: { poloId?: string; unidadeEscCodigo?: string; meses?: number }) {
+  return prisma.crianca.findMany({
+    where: whereFilaDeRevalidacao(opts),
     include: {
       responsavelPrincipal: true,
       contatos: { where: { ativo: true }, orderBy: { ordemTentativa: "asc" } },
       inscricoes: { orderBy: { dataCriacao: "desc" }, take: 1 },
     },
     orderBy: { nomeExibicao: "asc" },
+    take: TAMANHO_FILA_DE_REVALIDACAO,
   });
+}
 
-  return criancas;
+/** Contagem total (sem o limite de página) — para o card de estatística do painel. */
+export async function contarFilaDeRevalidacao(opts: { poloId?: string; unidadeEscCodigo?: string; meses?: number }) {
+  return prisma.crianca.count({ where: whereFilaDeRevalidacao(opts) });
 }
 
 function resumoContato(c: { canal: string; valor: string }) {
