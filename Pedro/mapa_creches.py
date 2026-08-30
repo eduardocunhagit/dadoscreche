@@ -576,12 +576,13 @@ def add_microareas(map_object: folium.Map) -> None:
     folium.GeoJson(
         data=json.loads(microareas.to_json()),
         name="Microáreas SME/IPP",
-        show=False,
+        show=True,
         style_function=lambda _: {
-            "color": "#4361ee",
-            "weight": 1,
-            "opacity": 0.55,
-            "fillOpacity": 0.03,
+            "color": "#71869a",
+            "weight": 0.9,
+            "opacity": 0.75,
+            "fillColor": "#e7edf2",
+            "fillOpacity": 0.55,
         },
         tooltip=folium.GeoJsonTooltip(
             fields=["cre", "cod_territ"],
@@ -617,14 +618,21 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
         location=map_center,
         zoom_start=10,
         tiles=None,
+        attribution_control=False,
         control_scale=True,
         prefer_canvas=True,
     )
-    folium.TileLayer(
-        tiles="CartoDB positron",
-        name="Mapa-base",
-        control=False,
-    ).add_to(map_object)
+    # The map uses the local SME/IPP geometry as its geographic background.
+    # This avoids depending on an external tile provider and its attribution.
+    map_object.get_root().header.add_child(
+        Element(
+            """
+            <style>
+              .leaflet-container { background: #f4f7f9; }
+            </style>
+            """
+        )
+    )
     map_object.fit_bounds(
         [
             [located["latitude"].min(), located["longitude"].min()],
