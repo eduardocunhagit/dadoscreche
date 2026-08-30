@@ -139,27 +139,37 @@ export interface UnidadeParaEscolha {
   latitude: number | null;
   longitude: number | null;
   demanda: "ALTA" | "MEDIA" | "BAIXA" | null;
+  /**
+   * Demanda excedente prevista = planning_gap / oferta do ano anterior
+   * (ex.: 0.43 = demanda 43% acima da oferta). null quando a fonte é o
+   * placeholder de pressão de fila ou quando a oferta-proxy era zero.
+   */
+  demandaExcedente: number | null;
 }
 
 /**
  * Unidades para a etapa de escolha da inscrição: só as que têm geo (aparecem
  * no mapa) ou já têm alguma inscrição histórica (aparecem na lista mesmo sem
- * ponto no mapa). Demanda prioriza a fonte "modelo_f2" sobre o placeholder
- * "classe_pressao_2025" quando as duas existirem pro mesmo ano.
+ * ponto no mapa). Demanda: a previsão do modelo da frente 2 ("modelo_f2") é
+ * para o ANO LETIVO SEGUINTE ao processo (inscrição de `ano` disputa vaga em
+ * `ano + 1`), então buscamos [ano, ano + 1] e priorizamos modelo_f2 do ano
+ * seguinte > modelo_f2 do ano > placeholder "classe_pressao_2025". Só o
+ * modelo_f2 carrega o valor numérico do excedente (gap / oferta anterior).
  */
 export async function listarUnidadesComGeoEDemanda(ano: number): Promise<UnidadeParaEscolha[]> {
   const unidades = await prisma.unidade.findMany({
     where: { OR: [{ geo: { isNot: null } }, { opcoes: { some: {} } }] },
     include: {
       geo: true,
-      demandas: { where: { ano } },
+      demandas: { where: { ano: { in: [ano, ano + 1] } } },
     },
     orderBy: { nome: "asc" },
   });
 
   return unidades.map((u) => {
     const demanda =
-      u.demandas.find((d) => d.fonte === "modelo_f2") ??
+      u.demandas.find((d) => d.fonte === "modelo_f2" && d.ano === ano + 1) ??
+      u.demandas.find((d) => d.fonte === "modelo_f2" && d.ano === ano) ??
       u.demandas.find((d) => d.fonte === "classe_pressao_2025");
 
     return {
@@ -170,6 +180,7 @@ export async function listarUnidadesComGeoEDemanda(ano: number): Promise<Unidade
       latitude: u.geo?.latitude ?? null,
       longitude: u.geo?.longitude ?? null,
       demanda: (demanda?.classe as "ALTA" | "MEDIA" | "BAIXA" | undefined) ?? null,
+      demandaExcedente: demanda?.fonte === "modelo_f2" ? (demanda.valor ?? null) : null,
     };
   });
 }

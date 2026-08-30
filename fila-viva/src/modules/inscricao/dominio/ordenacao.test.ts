@@ -76,8 +76,8 @@ describe("ordenacao", () => {
 
     it("deve remover com igualdade customizada mesmo com objetos diferentes", () => {
       const igual = (a: { id: number }, b: { id: number }) => a.id === b.id;
-      const lista = [{ id: 1 }, { id: 2 }];
-      const resultado = alternarEscolha(lista, { id: 2, nome: "x" } as any, igual);
+      const lista: { id: number; nome?: string }[] = [{ id: 1 }, { id: 2 }];
+      const resultado = alternarEscolha(lista, { id: 2, nome: "x" }, igual);
       expect(resultado).toEqual([{ id: 1 }]);
     });
   });
