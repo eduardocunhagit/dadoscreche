@@ -10,6 +10,7 @@
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx scripts/seed.ts",
+    "db:geo": "tsx scripts/importar-geo.ts",
     "db:reset": "prisma migrate reset --force"
   },
   "dependencies": {
