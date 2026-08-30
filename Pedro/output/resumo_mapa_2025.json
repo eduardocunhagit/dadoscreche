@@ -1,0 +1,22 @@
+{
+  "ano_referencia": 2025,
+  "unidades_no_painel": 840,
+  "unidades_mapeadas": 824,
+  "unidades_sem_coordenada": 16,
+  "matriculas_mapeadas": 87239,
+  "demanda_historica_mapeada_pares_crianca_unidade": 154619,
+  "criancas_em_fila_mapeadas_por_unidade": 16032,
+  "unidades_com_fila": 464,
+  "f1_disponivel": false,
+  "f2_disponivel": false,
+  "pressao_prevista_disponivel": false,
+  "ic_95_disponivel": false,
+  "arquivo_previsao_esperado": "Pedro\\Modelo\\results\\f2_prev_unidade.csv",
+  "fontes": {
+    "matriculas_publicas": "totaalunoscreche2025.xlsx",
+    "matriculas_parceiras": "Parceiras2025.xlsx",
+    "fila": "01_QueryA_InscricoesPorAno.csv.gz",
+    "coordenadas": "Unidades_Unificadas_com_Localizacao.xlsx",
+    "limites_territoriais": "Microareas_SME_revisao.shp"
+  }
+}
