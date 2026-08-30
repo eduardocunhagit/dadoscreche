@@ -25,6 +25,16 @@ Todas as bases estão neste repositório. Basta clonar.
 
 ---
 
+## 🛠️ Nossa solução
+
+O código do nosso time para o hackathon fica em [`fila-viva/`](./fila-viva) —
+cadastro de contatos e motor de alocação (liberação em cascata + aceite
+condicional) para o Eixo 2/3. Ver [`fila-viva/README.md`](./fila-viva/README.md)
+para rodar, e `npx tsx fila-viva/scripts/simulador.ts` para reprocessar a
+Query A real e ver o tamanho do problema que a solução ataca.
+
+---
+
 ## 📚 Materiais de Apoio
 
 - Apresentação: [Acessar](https://rioeduca-my.sharepoint.com/:p:/g/personal/gabrielledomingues_rioeduca_net/IQAlvS8n9w7OQ6WcJK2T-wr6AVcXGJuT7MdyJ41qQtqlff0?e=xkQwfk)
