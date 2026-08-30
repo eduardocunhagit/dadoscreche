@@ -105,7 +105,7 @@ export default function Home() {
       </div>
     </section>
 
-    <section className="decision shell"><div><span>Versão testável</span><h2>Pipeline real, reproduzível e sem caixa-preta.</h2></div><p>Os arquivos agregados e o manifesto estão em <code>frente2/06_resultados/arquivos_gerados</code>. Rode <code>python frente2/executar_frente2.py</code> para reproduzir.</p></section>
+    <section className="decision shell"><div><span>Versão testável</span><h2>Pipeline real, reproduzível e sem caixa-preta.</h2></div><p>Os arquivos agregados e o manifesto estão em <code>pipeline_demanda/06_resultados/arquivos_gerados</code>. Rode <code>python pipeline_demanda/executar_frente2.py</code> para reproduzir.</p></section>
     <footer className="shell"><span>Frente 2 · demanda condicionada à inscrição</span><span>Dados históricos anonimizados · OOS 2024–2025</span></footer>
   </main>;
 }
