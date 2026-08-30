@@ -5,6 +5,7 @@ import { moduloAlocacao } from "./alocacao";
 import { moduloMapaDemanda } from "./mapa-demanda";
 import { moduloExemplo } from "./exemplo";
 import { moduloInscricao } from "./inscricao";
+import { moduloMensagens } from "./mensagens";
 import type { Modulo, ItemDeMenu } from "./tipos";
 
 // A única linha compartilhada que um módulo novo toca: acrescentar o import
@@ -13,6 +14,7 @@ import type { Modulo, ItemDeMenu } from "./tipos";
 export const MODULOS: Modulo[] = [
   moduloPerfilContatos,
   moduloAlocacao,
+  moduloMensagens,
   moduloMapaDemanda,
   moduloExemplo,
   moduloInscricao,

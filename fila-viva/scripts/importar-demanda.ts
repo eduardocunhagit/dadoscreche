@@ -6,7 +6,7 @@
  *
  *   npm run db:demanda
  *
- * Fonte: frente2/06_resultados/arquivos_gerados/gap_demanda_efetiva_2026.csv
+ * Fonte: pipeline_demanda/06_resultados/arquivos_gerados/gap_demanda_efetiva_2026.csv
  * (uma linha por unidade; previsão do modelo para o ano letivo de 2026).
  * A métrica pedida pela SME na tela de escolha:
  *
@@ -28,7 +28,6 @@ import { parse } from "csv-parse/sync";
 import { prisma } from "../src/core/db/client";
 
 const RAIZ_DADOS = path.resolve(__dirname, "..", "..");
-// Pasta renomeada de "frente2" para "pipeline_demanda" no PR #11.
 const ARQUIVO_GAP = path.join(
   RAIZ_DADOS,
   "pipeline_demanda",
@@ -45,7 +44,8 @@ interface LinhaGap {
   ano: string;
   unidade: string;
   nome_unidade_norm: string;
-  demanda_efetiva_prevista: string;
+  demanda_efetiva_prevista?: string;
+  demanda_prevista?: string;
   matriculas_2025_proxy_capacidade: string;
   planning_gap: string;
 }
@@ -83,7 +83,7 @@ async function main() {
     }
 
     const oferta = Number(l.matriculas_2025_proxy_capacidade) || 0;
-    const demanda = Number(l.demanda_efetiva_prevista) || 0;
+    const demanda = Number(l.demanda_efetiva_prevista ?? l.demanda_prevista) || 0;
     const gap = Number(l.planning_gap) || demanda - oferta;
 
     let classe: "ALTA" | "MEDIA" | "BAIXA";

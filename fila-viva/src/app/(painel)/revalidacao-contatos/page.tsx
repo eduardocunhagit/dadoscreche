@@ -1,14 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/core/auth";
 import { filaDeRevalidacao } from "@/modules/perfil-contatos";
 import { Cartao, CartaoCorpo } from "@/core/ui/Card";
-import { Selo } from "@/core/ui/Badge";
-
-function formatarData(d: Date | null) {
-  if (!d) return "nunca";
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(d);
-}
+import { PainelRevalidacao } from "@/modules/mensagens/PainelRevalidacao";
+import { statusPorCrianca } from "@/modules/mensagens";
 
 export default async function PaginaRevalidacaoContatos() {
   const session = await auth();
@@ -23,6 +18,7 @@ export default async function PaginaRevalidacaoContatos() {
         : {};
 
   const criancas = await filaDeRevalidacao(escopo);
+  const statusComunicacao = await statusPorCrianca(criancas.map((crianca) => crianca.id));
 
   return (
     <div className="space-y-6">
@@ -42,27 +38,27 @@ export default async function PaginaRevalidacaoContatos() {
         </Cartao>
       )}
 
-      <div className="space-y-3">
-        {criancas.map((crianca) => (
-          <Link key={crianca.id} href={`/meus-filhos/${crianca.id}`}>
-            <Cartao className="transition-colors hover:border-accent">
-              <CartaoCorpo className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium text-ink">{crianca.nomeExibicao}</p>
-                  <p className="text-xs text-muted">Responsável: {crianca.responsavelPrincipal.nomeExibicao}</p>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {crianca.contatos.map((c) => (
-                    <Selo key={c.id} tom={c.verificadoEm ? "neutro" : "atencao"}>
-                      {c.canal} · {formatarData(c.verificadoEm)}
-                    </Selo>
-                  ))}
-                </div>
-              </CartaoCorpo>
-            </Cartao>
-          </Link>
-        ))}
-      </div>
+      {criancas.length > 0 && (
+        <PainelRevalidacao
+          criancas={criancas.map((crianca) => ({
+            id: crianca.id,
+            nomeExibicao: crianca.nomeExibicao,
+            responsavelNome: crianca.responsavelPrincipal.nomeExibicao,
+            statusComunicacao: statusComunicacao[crianca.id] ?? "NAO_ENVIADA",
+            contatos: crianca.contatos.map((contato) => ({
+              id: contato.id,
+              papel: contato.papel,
+              nomeContato: contato.nomeContato,
+              parentesco: contato.parentesco,
+              canal: contato.canal,
+              valor: contato.valor,
+              ordemTentativa: contato.ordemTentativa,
+              verificadoEm: contato.verificadoEm?.toISOString() ?? null,
+              consentimentoEm: contato.consentimentoEm?.toISOString() ?? null,
+            })),
+          }))}
+        />
+      )}
     </div>
   );
 }

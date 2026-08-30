@@ -27,11 +27,12 @@ Todas as bases estão neste repositório. Basta clonar.
 
 ## 🛠️ Nossa solução
 
-O código do nosso time para o hackathon fica em [`fila-viva/`](./fila-viva) —
-cadastro de contatos e motor de alocação (liberação em cascata + aceite
-condicional) para o Eixo 2/3. Ver [`fila-viva/README.md`](./fila-viva/README.md)
-para rodar, e `npx tsx fila-viva/scripts/simulador.ts` para reprocessar a
-Query A real e ver o tamanho do problema que a solução ataca.
+A entrega tem duas partes, nesta ordem:
+
+1. [`pipeline_demanda/`](./pipeline_demanda) — única fonte para estimar a demanda de 2026 e calcular o gap efetivo por creche;
+2. [`fila-viva/`](./fila-viva) — aplicação que consome esse gap no mapa do gestor e no fluxo do responsável.
+
+Não há uma segunda árvore de modelo. A ordem completa de execução está em [`fila-viva/README.md`](./fila-viva/README.md).
 
 ---
 

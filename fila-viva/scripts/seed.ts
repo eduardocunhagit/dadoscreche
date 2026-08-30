@@ -87,6 +87,8 @@ async function main() {
 }
 
 async function limparBanco() {
+  await prisma.msgMensagem.deleteMany();
+  await prisma.msgConversa.deleteMany();
   await prisma.ofertaEvento.deleteMany();
   await prisma.opcao.deleteMany();
   await prisma.resposta.deleteMany();

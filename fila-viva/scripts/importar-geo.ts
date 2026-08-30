@@ -1,6 +1,6 @@
 /**
  * Importa geocodificação e demanda prevista das unidades a partir de
- * prisma/dados/creches_2025.csv (geocodificação do Pedro, branch pedro).
+ * prisma/dados/creches_2025.csv (geocodificação versionada no Fila Viva).
  *
  * Idempotente — pode ser rodado quantas vezes for preciso (upserts em
  * chaves únicas). Ver EXTENDING.md e os models InscUnidadeGeo /
@@ -11,7 +11,7 @@
  *      normalizando zeros à esquerda dos dois lados (o banco pode ter
  *      escCodigo com zero à esquerda, o CSV não necessariamente).
  *   2. Para linhas com latitude/longitude preenchidas: upsert
- *      InscUnidadeGeo (origem CSV_PEDRO).
+ *      InscUnidadeGeo (origem CSV_GEOCODIFICACAO).
  *   3. Para linhas com classe_pressao_fila reconhecida: upsert
  *      InscDemandaPrevista (ano 2025, fonte classe_pressao_2025).
  *   4. Para unidades que ainda ficaram sem geo: tenta um centroide por
@@ -77,13 +77,13 @@ async function main() {
           latitude: Number(linha.latitude),
           longitude: Number(linha.longitude),
           plmId: cre,
-          origem: "CSV_PEDRO",
+          origem: "CSV_GEOCODIFICACAO",
         },
         update: {
           latitude: Number(linha.latitude),
           longitude: Number(linha.longitude),
           plmId: cre,
-          origem: "CSV_PEDRO",
+          origem: "CSV_GEOCODIFICACAO",
         },
       });
       totalGeoCsv++;
@@ -113,7 +113,7 @@ async function main() {
     }
   }
 
-  console.log(`  ${totalGeoCsv} geo (CSV_PEDRO), ${totalDemanda} demanda prevista, ${codigosNaoCasados} códigos não casados.`);
+  console.log(`  ${totalGeoCsv} geo (CSV_GEOCODIFICACAO), ${totalDemanda} demanda prevista, ${codigosNaoCasados} códigos não casados.`);
 
   console.log("Preenchendo centroides por bairro para unidades sem geo...");
   const totalCentroides = await preencherCentroidesPorBairro();
@@ -132,13 +132,13 @@ async function main() {
 }
 
 async function preencherCentroidesPorBairro(): Promise<number> {
-  const geosCsvPedro = await prisma.inscUnidadeGeo.findMany({
-    where: { origem: "CSV_PEDRO" },
+  const geosCsv = await prisma.inscUnidadeGeo.findMany({
+    where: { origem: "CSV_GEOCODIFICACAO" },
     select: { latitude: true, longitude: true, unidade: { select: { bairro: true } } },
   });
 
   const somaPorBairro = new Map<string, { somaLat: number; somaLon: number; total: number }>();
-  for (const g of geosCsvPedro) {
+  for (const g of geosCsv) {
     const bairroNormalizado = normalizarBairro(g.unidade.bairro);
     if (!bairroNormalizado) continue;
     const acumulado = somaPorBairro.get(bairroNormalizado) ?? { somaLat: 0, somaLon: 0, total: 0 };
