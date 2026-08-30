@@ -19,7 +19,7 @@
   "gaps_significativos_95": null,
   "pressao_prevista_disponivel": false,
   "ic_95_disponivel": false,
-  "arquivo_previsao_esperado": "Pedro\\Modelo\\results\\f2_prev_unidade.csv",
+  "arquivo_previsao_esperado": "pipeline_demanda\\04_previsoes\\previsao_2026_unidade.csv",
   "fontes": {
     "matriculas_publicas": "totaalunoscreche2025.xlsx",
     "matriculas_parceiras": "Parceiras2025.xlsx",

@@ -1,0 +1,7 @@
+﻿ano,tipo,observado,previsto_ppml,limite_95_inf,limite_95_sup,previsto_persistencia,quebra_cobertura,modelo,intervalo
+2021,historico_treino,57033.0,,,,,False,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%
+2022,historico_treino,57107.0,,,,,False,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%
+2023,backtest_oos,45327.0,57009.35620676496,55615.668656851165,58403.04375667876,54241.31170080039,False,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%
+2024,backtest_oos,70828.0,42652.999904516655,41415.16047003075,43890.83933900256,43286.281830787775,True,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%
+2025,backtest_oos,61902.0,65114.350249791634,62554.54414376928,67674.15635581399,66673.13270650503,False,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%
+2026,previsao,,66800.9,64159.0,69442.8,59717.6,False,PPML com efeitos fixos territoriais e por faixa etaria,Preditivo condicional de 95%

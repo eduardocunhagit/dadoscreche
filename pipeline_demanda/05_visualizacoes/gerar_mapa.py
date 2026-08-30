@@ -16,9 +16,9 @@ from folium.plugins import Fullscreen, HeatMap
 
 
 REFERENCE_YEAR = 2025
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-PEDRO_DIR = REPOSITORY_ROOT / "Pedro"
-OUTPUT_DIR = PEDRO_DIR / "output"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+PIPELINE_DIR = Path(__file__).resolve().parents[1]
+OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 
 LOCATION_FILE = (
     REPOSITORY_ROOT
@@ -46,7 +46,7 @@ MAP_FILE = OUTPUT_DIR / "mapa_creches_2025.html"
 PANEL_FILE = OUTPUT_DIR / "creches_2025.csv"
 UNMATCHED_FILE = OUTPUT_DIR / "creches_sem_coord_2025.csv"
 SUMMARY_FILE = OUTPUT_DIR / "resumo_mapa_2025.json"
-PREDICTED_DEMAND_FILE = PEDRO_DIR / "Modelo" / "results" / "f2_prev_unidade.csv"
+PREDICTED_DEMAND_FILE = PIPELINE_DIR / "04_previsoes" / "previsao_2026_unidade.csv"
 
 
 def normalize_code(series: pd.Series) -> pd.Series:
@@ -319,7 +319,7 @@ def load_application_metrics() -> pd.DataFrame:
 
 
 def load_predicted_demand() -> pd.DataFrame:
-    """Load optional Front 1, Front 2, uncertainty, and lagged-capacity outputs.
+    """Load optional demand, uncertainty, and lagged-capacity outputs.
 
     Confidence limits must already describe the unit-level effective-demand distribution.
     They are not mechanically summed across age groups because quantiles are not additive.
