@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Performance historica do modelo de demanda</title>
+<style>
+:root{--ink:#16212b;--muted:#5f6b76;--teal:#006d77;--pale:#edf7f6;--line:#d8e0e5;--warn:#fff4e8}
+*{box-sizing:border-box} body{margin:0;background:#f4f6f7;color:var(--ink);font:15px/1.5 Arial,sans-serif}
+main{max-width:1050px;margin:32px auto;padding:0 22px} .hero{background:white;border-radius:14px;padding:28px 30px;border:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:30px;letter-spacing:-.4px} h2{margin-top:30px;font-size:20px} p{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0} .card{background:var(--pale);padding:15px;border-radius:10px}
+.card span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em} .card strong{font-size:23px;color:var(--teal)}
+img{width:100%;background:white;border-radius:10px;border:1px solid var(--line);margin:8px 0 12px}
+table{width:100%;border-collapse:collapse;background:white;font-size:13px} th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left} th{background:#eef2f3}
+.note{background:var(--warn);border-left:4px solid #e76f51;padding:12px 14px;color:#6b4b2a} code{background:#eef2f3;padding:2px 5px;border-radius:4px}
+@media(max-width:760px){.cards{grid-template-columns:1fr 1fr} .table-wrap{overflow:auto}}
+</style>
+</head>
+<body><main><section class="hero">
+<h1>Performance historica e previsao de demanda</h1>
+<p><strong>Alvo:</strong> numero de criancas inscritas, contando cada crianca uma vez. O modelo e um PPML com efeitos fixos de territorio e faixa etaria, tendencia por faixa e exposicao da coorte elegivel.</p>
+<div class="cards">
+<div class="card"><span>WAPE OOS 2025</span><strong>24,0%</strong></div>
+<div class="card"><span>Vies 2025</span><strong>5,2%</strong></div>
+<div class="card"><span>Previsao 2026</span><strong>66.801</strong></div>
+<div class="card"><span>Intervalo 95%</span><strong>64.159-69.443</strong></div>
+</div>
+<img src="performance_modelo_demanda.png" alt="Observado, previsao e intervalo preditivo">
+<div class="note"><strong>Leitura de 2024:</strong> o salto inclui a entrada de centenas de creches parceiras na extracao. O erro desse ano mede conjuntamente previsao e mudanca de cobertura; por isso 2025 e o teste operacional mais comparavel.</div>
+
+<h2>Serie anual</h2>
+<div class="table-wrap"><table><thead><tr><th>Ano</th><th>Status</th><th>Observado</th><th>PPML</th><th>Intervalo 95%</th><th>Persistencia</th></tr></thead>
+<tbody><tr><td>2021</td><td>historico treino</td><td>57.033</td><td>-</td><td>[-; -]</td><td>-</td></tr><tr><td>2022</td><td>historico treino</td><td>57.107</td><td>-</td><td>[-; -]</td><td>-</td></tr><tr><td>2023</td><td>backtest oos</td><td>45.327</td><td>57.009</td><td>[55.616; 58.403]</td><td>54.241</td></tr><tr><td>2024</td><td>Quebra de cobertura na extracao</td><td>70.828</td><td>42.653</td><td>[41.415; 43.891]</td><td>43.286</td></tr><tr><td>2025</td><td>backtest oos</td><td>61.902</td><td>65.114</td><td>[62.555; 67.674]</td><td>66.673</td></tr><tr><td>2026</td><td>previsao</td><td>-</td><td>66.801</td><td>[64.159; 69.443]</td><td>59.718</td></tr></tbody></table></div>
+
+<h2>Performance fora da amostra</h2>
+<div class="table-wrap"><table><thead><tr><th>Ano</th><th>Treino</th><th>WAPE PPML</th><th>Vies PPML</th><th>Cobertura 95%</th><th>WAPE persistencia</th></tr></thead>
+<tbody><tr><td>2023</td><td>2021-2022</td><td>34,9%</td><td>25,8%</td><td>57,9%</td><td>25,2%</td></tr><tr><td>2024*</td><td>2021-2023</td><td>41,0%</td><td>-39,8%</td><td>43,9%</td><td>39,8%</td></tr><tr><td>2025</td><td>2021-2024</td><td>24,0%</td><td>5,2%</td><td>86,3%</td><td>16,0%</td></tr></tbody></table></div>
+<p>* 2024 tem quebra de cobertura. WAPE e o erro absoluto total dividido pela demanda observada. A cobertura mede a proporcao de celulas territorio-faixa cujo realizado caiu no intervalo.</p>
+
+<h2>Como interpretar</h2>
+<p>O ponto de 2026 e a melhor estimativa do modelo. O intervalo de 95% e preditivo e condicional: incorpora a dispersao historica das contagens, mas nao incerteza sobre revisoes futuras da base ou mudancas de cobertura. Ele e mais apropriado para planejamento do que um intervalo apenas dos coeficientes.</p>
+<p>Arquivos reproduziveis: <code>previsao_historica_2021_2026.csv</code> e <code>performance_historica_2023_2025.csv</code>.</p>
+</section></main></body></html>

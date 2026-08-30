@@ -15,11 +15,13 @@ from sklearn.preprocessing import OneHotEncoder
 np.random.seed(42)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-MODEL_DIR = Path(__file__).resolve().parent
-RESULTS_DIR = MODEL_DIR / "results"
-FIGURES_DIR = MODEL_DIR / "figures"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+PIPELINE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = PIPELINE_DIR / "01_dados"
+VALIDATION_DIR = PIPELINE_DIR / "03_validacao" / "resultados"
+FORECAST_DIR = PIPELINE_DIR / "04_previsoes"
+FIGURES_DIR = PIPELINE_DIR / "03_validacao" / "figuras"
+for directory in (DATA_DIR, VALIDATION_DIR, FORECAST_DIR, FIGURES_DIR):
+    directory.mkdir(parents=True, exist_ok=True)
 
 QUERY_A_PATH = PROJECT_ROOT / "Bases IC_ ClassificadoseFila" / "01_QueryA_InscricoesPorAno.csv.gz"
 BIRTHS_PATH = PROJECT_ROOT / "NascidosvivosRJ.xlsx"
@@ -375,7 +377,7 @@ def save_figures(oos_predictions):
     ax.legend(frameon=False, ncol=3)
     ax.grid(axis="y", alpha=0.2)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "f1_oos.png", dpi=180)
+    fig.savefig(FIGURES_DIR / "validacao_oos.png", dpi=180)
     plt.close(fig)
 
 
@@ -452,18 +454,18 @@ def main():
         .reset_index()
     )
 
-    panel.to_csv(RESULTS_DIR / "f1_panel.csv", index=False, encoding="utf-8-sig")
-    oos_predictions.to_csv(RESULTS_DIR / "f1_oos_pred.csv", index=False, encoding="utf-8-sig")
-    metrics.to_csv(RESULTS_DIR / "f1_oos.csv", index=False, encoding="utf-8-sig")
-    forecast_2026.to_csv(RESULTS_DIR / "f1_prev_2026.csv", index=False, encoding="utf-8-sig")
-    forecast_summary.to_csv(RESULTS_DIR / "f1_resumo_2026.csv", index=False, encoding="utf-8-sig")
-    audit.to_csv(RESULTS_DIR / "f1_auditoria.csv", index=False, encoding="utf-8-sig")
-    flows.to_csv(RESULTS_DIR / "f1_fluxos.csv", index=False, encoding="utf-8-sig")
+    panel.to_csv(DATA_DIR / "painel_modelo.csv", index=False, encoding="utf-8-sig")
+    oos_predictions.to_csv(VALIDATION_DIR / "previsoes_oos_2025.csv", index=False, encoding="utf-8-sig")
+    metrics.to_csv(VALIDATION_DIR / "metricas_oos_2025.csv", index=False, encoding="utf-8-sig")
+    forecast_2026.to_csv(FORECAST_DIR / "previsao_2026_territorio_grupamento.csv", index=False, encoding="utf-8-sig")
+    forecast_summary.to_csv(FORECAST_DIR / "previsao_2026_resumo.csv", index=False, encoding="utf-8-sig")
+    audit.to_csv(VALIDATION_DIR / "auditoria_modelo.csv", index=False, encoding="utf-8-sig")
+    flows.to_csv(VALIDATION_DIR / "fluxos_amostra.csv", index=False, encoding="utf-8-sig")
 
-    metrics.round(4).to_latex(RESULTS_DIR / "f1_oos.tex", index=False, float_format="%.4f")
-    forecast_summary.to_latex(RESULTS_DIR / "f1_resumo_2026.tex", index=False, float_format="%.1f")
-    audit.round(4).to_latex(RESULTS_DIR / "f1_auditoria.tex", index=False, float_format="%.4f")
-    flows.to_latex(RESULTS_DIR / "f1_fluxos.tex", index=False)
+    metrics.round(4).to_latex(VALIDATION_DIR / "metricas_oos_2025.tex", index=False, float_format="%.4f")
+    forecast_summary.to_latex(FORECAST_DIR / "previsao_2026_resumo.tex", index=False, float_format="%.1f")
+    audit.round(4).to_latex(VALIDATION_DIR / "auditoria_modelo.tex", index=False, float_format="%.4f")
+    flows.to_latex(VALIDATION_DIR / "fluxos_amostra.tex", index=False)
     save_figures(oos_predictions)
 
     print("AUDITORIA")
