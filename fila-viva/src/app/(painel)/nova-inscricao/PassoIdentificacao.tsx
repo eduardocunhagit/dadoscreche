@@ -59,6 +59,9 @@ function BuscaEndereco({ titulo, obrigatorio, endereco, onEnderecoChange, bairro
       <Rotulo>
         {titulo}
         {obrigatorio ? "" : " (opcional)"}
+        <span className="ml-1 font-normal normal-case tracking-normal text-faint">
+          (após digitar o CEP, clique em Buscar)
+        </span>
       </Rotulo>
       <div className="flex gap-2">
         <Campo
