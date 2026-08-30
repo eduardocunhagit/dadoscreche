@@ -98,12 +98,41 @@ def calcular_gap(demand, capacity, demand_col):
     return result
 
 
+def calcular_gap_unidade(demand, capacity, demand_col):
+    required = {"ano", "unidade", demand_col}
+    missing = sorted(required - set(demand.columns))
+    if missing:
+        raise ValueError(f"Colunas ausentes na demanda: {missing}")
+    data = demand.copy()
+    data["unidade"] = normalize_code(data["unidade"])
+    demand_unit = (
+        data.groupby(["ano", "unidade"], as_index=False, observed=True)[demand_col]
+        .sum().rename(columns={demand_col: "demanda_prevista"})
+    )
+    capacity_unit = (
+        capacity.groupby(["ano", "unidade"], as_index=False, observed=True)
+        .agg(
+            matriculas_ano_anterior=("matriculas_ano_anterior", "sum"),
+            ano_matricula=("ano_matricula", "first"),
+            rede=("rede", "first"),
+            capacity_concept=("capacity_concept", "first"),
+        )
+    )
+    result = demand_unit.merge(capacity_unit, on=["ano", "unidade"], how="left", validate="one_to_one")
+    result["capacity_coverage"] = result["matriculas_ano_anterior"].notna()
+    result["planning_gap"] = result["demanda_prevista"] - result["matriculas_ano_anterior"]
+    result["gap_positivo"] = result["planning_gap"].gt(0).where(result["capacity_coverage"])
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--demanda", type=Path)
     parser.add_argument("--coluna-demanda", default="demanda_prevista")
     parser.add_argument("--saida-proxy", required=True, type=Path)
     parser.add_argument("--saida-gap", type=Path)
+    parser.add_argument("--nivel", choices=("grupamento", "unidade"), default="grupamento")
+    parser.add_argument("--ano-demanda", type=int)
     args = parser.parse_args()
 
     proxy = construir_proxy_capacidade()
@@ -113,7 +142,10 @@ def main():
         if not args.saida_gap:
             parser.error("--saida-gap é obrigatório quando --demanda for informado")
         demand = pd.read_csv(args.demanda, dtype={"unidade": "string"})
-        gap = calcular_gap(demand, proxy, args.coluna_demanda)
+        if args.ano_demanda is not None:
+            demand["ano"] = args.ano_demanda
+        function = calcular_gap if args.nivel == "grupamento" else calcular_gap_unidade
+        gap = function(demand, proxy, args.coluna_demanda)
         args.saida_gap.parent.mkdir(parents=True, exist_ok=True)
         gap.to_csv(args.saida_gap, index=False)
 
