@@ -325,7 +325,7 @@ def build_pdf():
     story.append(paragraph("Universo e entrada<br/>na rede de creches", "CoverTitle"))
     story.append(
         paragraph(
-            "Auditoria das bases locais, definição do alvo, primeira estimação e validação fora da amostra em 2024 e 2025.",
+            "Auditoria das bases locais, definição do alvo, primeira estimação e validação fora da amostra em 2025.",
             "CoverSubtitle",
         )
     )
@@ -376,7 +376,7 @@ def build_pdf():
         ["Evento", "inscrição inicial, qualquer situação final", "Confirmação, cancelamento e fila ocorrem depois e dependem de capacidade/classificação."],
         ["Universo", "coortes de nascimentos por bairro/ano", "Fluxo administrativo anual observado; é superior a interpolar idade em pequena área quando o dado não existe."],
         ["Estimador", "PPML com offset, indicadores territoriais ridge e tendência por grupamento", "O alvo é contagem e a exposição varia muito entre bairros."],
-        ["Validação", "origem expansiva 2024 e 2025", "Replica a informação disponível na data de cada previsão; sem embaralhar anos."],
+        ["Validação", "treina 2021–2024 e prevê 2025", "2024 fica no histórico de treino, mas não entra nas métricas OOS devido à quebra de cobertura."],
     ]
     story.append(make_table(decision_rows, [31 * mm, 56 * mm, 87 * mm], font_size=7.4))
     story.append(Spacer(1, 8))
@@ -400,7 +400,7 @@ def build_pdf():
         ["NascidosvivosRJ.xlsx", "2016–2026; bairro × ano", "168 códigos, dos quais 2 residuais; 2026 está parcial", "Exposição por coorte. Para prever 2026 usam-se apenas 2022–2025."],
         ["Microáreas SME", "233 geometrias; estoque", "232 códigos; duplicidade 7.28; 1 geometria inválida", "Dimensão futura. Não há microárea de residência nas inscrições."],
         ["Oferta pública/parceira", "2021–2025; unidade/grupamento; layouts variáveis", "~1.547–1.560 linhas públicas/ano e 218–353 linhas parceiras/ano", "Covariada futura, com data de corte; não é denominador da demanda."],
-        ["Unidades unificadas", "unidade; localização", "1.941 linhas principais + 1.914 parceiras; 871/872 unidades da Query A vinculadas", "Localização da unidade: essencial à Frente 2, insuficiente para residência da Frente 1."],
+        ["Unidades unificadas", "unidade; localização", "1.941 linhas principais + 1.914 parceiras; 871/872 unidades da Query A vinculadas", "Identifica a unidade escolhida na saída final por creche; não substitui a residência da criança."],
     ]
     story.append(make_table(inventory, [34 * mm, 41 * mm, 48 * mm, 51 * mm], font_size=6.8))
     story.append(Spacer(1, 7))
@@ -426,7 +426,7 @@ def build_pdf():
     story.append(paragraph("A(m,g,t) = número de valores distintos de aluno_anon no ano t, com residência harmonizada no território m e grupamento g, independentemente da situação posterior da opção.", "EquationAudit"))
     story.append(bullet("Não somar filas por creche: a mesma criança aparece em várias opções."))
     story.append(bullet("Não condicionar a Confirmado ou Lista de espera: isso mistura demanda inicial com oferta, prioridade e decisão administrativa."))
-    story.append(bullet("Não usar endereço da creche para territorializar a criança: isso pertence à escolha condicional da Frente 2."))
+    story.append(bullet("Não usar endereço da creche para territorializar a criança: a origem continua sendo a residência; a unidade selecionada aparece apenas no alvo final por creche."))
     story.append(callout("Cobertura", f"Após harmonizar apenas variantes inequívocas de bairro, {audit_map['cobertura_geografica_pct']:.2f}% das crianças-ano entram no painel. Localidades ambíguas não foram imputadas à força.", background=PALE_TEAL, border=TEAL))
     story.append(PageBreak())
 
@@ -491,10 +491,10 @@ def build_pdf():
     story.append(PageBreak())
 
     # OOS
-    story.extend(heading("Validação fora da amostra: 2024 e 2025", "Resultados"))
-    story.append(paragraph("A avaliação segue origem expansiva: treina 2021–2023 e prevê 2024; depois treina 2021–2024 e prevê 2025. Esse desenho preserva a ordem temporal e explicita atualização/reestimação, como recomendado na literatura de testes OOS [7].", "BodyAudit"))
+    story.extend(heading("Validação fora da amostra: 2025", "Resultados"))
+    story.append(paragraph("A avaliação treina o modelo com 2021–2024 e prevê 2025. O ano de 2024 permanece no histórico de estimação, mas não é pontuado como teste OOS porque a expansão de 496 para 844 unidades indica uma quebra de cobertura ou de processo. O desenho preserva a ordem temporal e não utiliza informação de 2025 no ajuste [7].", "BodyAudit"))
     metric_rows = [["Teste", "Modelo", "Obs.", "Prev.", "WAPE", "Viés", "MAE", "Cob. 95%"]]
-    for year in [2024, 2025]:
+    for year in [2025]:
         for label, table in [("PPML-FE", metric_model), ("Persistência", metric_persistence)]:
             row = table.loc[year]
             coverage = "—" if pd.isna(row["cobertura_95"]) else f"{100*row['cobertura_95']:.1f}%"
@@ -516,7 +516,7 @@ def build_pdf():
     if image_path.exists():
         story.append(Image(str(image_path), width=167 * mm, height=86.8 * mm))
     story.append(Spacer(1, 4))
-    story.append(paragraph("Leitura: 2024 é uma quebra estrutural/operacional, não um erro pequeno de calibração. O PPML subestima o total em 39,8% e a persistência em 38,9%. Em 2025, o PPML reduz o viés agregado para +5,2%, mas a persistência tem WAPE menor (16,0% contra 24,0%). Os intervalos condicionais também subcobrem, sobretudo em 2024; seguindo Gneiting e Raftery [8], cobertura e largura precisam ser avaliadas conjuntamente, e não apenas o ponto médio.", "SmallAudit"))
+    story.append(paragraph("Leitura: em 2025, o PPML apresenta viés agregado de +5,2%, mas a persistência tem WAPE menor (16,0% contra 24,0%). A cobertura condicional de 95% do PPML é 86,3%; seguindo Gneiting e Raftery [8], cobertura e largura precisam ser avaliadas conjuntamente, e não apenas o ponto médio.", "SmallAudit"))
     story.append(PageBreak())
 
     # Forecast
@@ -537,8 +537,8 @@ def build_pdf():
     story.append(callout("Número de referência", f"PPML-FE: <b>{forecast_total['previsao_2026']:,.0f}</b>. Persistência: <b>{forecast_total['persistencia_2026']:,.0f}</b>. Diferença: <b>{forecast_total['previsao_2026']-forecast_total['persistencia_2026']:,.0f}</b> crianças na base anonimizada.", background=PALE_TEAL, border=TEAL))
     story.append(paragraph("O intervalo exibido usa uma distribuição binomial negativa com dispersão estimada nos resíduos (α ≈ 0,0529), condicionada aos parâmetros e ao universo proxy. Ele não incorpora integralmente erro no SINASC, incerteza de geocodificação, mudança de política ou erro de estimação dos efeitos territoriais. Portanto, é um intervalo mínimo, não uma banda de risco de política pública.", "BodyAudit"))
     story.append(paragraph("Por que não escolher automaticamente o PPML", "H2Audit"))
-    story.append(bullet("Há apenas dois anos OOS; um deles contém quebra severa."))
-    story.append(bullet("O challenger de persistência venceu o PPML em WAPE nos dois testes."))
+    story.append(bullet("Há apenas um ano OOS comparável depois da exclusão de 2024 das métricas."))
+    story.append(bullet("O challenger de persistência venceu o PPML em WAPE no teste de 2025."))
     story.append(bullet("A previsão pontual deve ser reportada como faixa de cenários até que 2024 seja explicado e os dados reais substituam os anonimizados."))
     story.append(paragraph("Recomendação de auditoria: manter ambos os cenários no painel decisório; promover um modelo a campeão somente após reprocessar dados reais, fixar o corte anual e repetir backtests em mais anos ou origens mensais.", "BodyAudit"))
     story.append(PageBreak())
@@ -572,7 +572,7 @@ def build_pdf():
         ["Denominador", "nascimentos anuais, sem mês", "Obter mês/microárea; comparar com projeção etária e matrículas passadas."],
         ["Painel curto", "cinco anos e muitos efeitos", "Shrinkage hierárquico; comparar pooling, ridge e intercepto aleatório [6]."],
         ["Dinâmica", "reinscrições crescem fortemente em 2025", "Modelar fluxos separadamente; evitar FE dinâmico ingênuo devido ao viés de painel curto [9]."],
-        ["Intervalos", "cobertura 95% de 43,9% em 2024 e 86,3% em 2025", "Bootstrap por território + cenários de coorte/política; avaliar interval score [8]."],
+        ["Intervalos", "cobertura 95% de 86,3% no OOS de 2025", "Bootstrap por território + cenários de coorte/política; avaliar interval score [8]."],
     ]
     story.append(make_table(risk_rows, [37 * mm, 64 * mm, 73 * mm], font_size=6.9))
     story.append(Spacer(1, 8))
@@ -585,24 +585,23 @@ def build_pdf():
     story.append(bullet("6. Publicar ficha do modelo: corte, versão das bases, cobertura, métricas e falhas conhecidas."))
     story.append(PageBreak())
 
-    # Integration
-    story.extend(heading("Contrato com a Frente 2", "Integração modular"))
-    story.append(paragraph("A Frente 1 termina na quantidade prevista de inscrições por origem territorial e grupamento. A Frente 2 distribui essa massa entre unidades elegíveis. Nenhuma característica da unidade deve ser necessária para estimar o universo; e a Frente 2 deve validar escolha condicionando ao total efetivamente inscrito.", "BodyAudit"))
-    story.append(paragraph("D_hat(i,g,t) = Σ_m A_hat(m,g,t) × P_hat(i | inscrição,m,g,t)", "EquationAudit"))
+    # Final Front 1 output by facility
+    story.extend(heading("Saída final por creche", "Demanda bruta potencial"))
+    story.append(paragraph("A Frente 1 termina na demanda bruta potencial de cada unidade: o número de crianças distintas que selecionaram a creche em qualquer opção. A mesma criança pode aparecer em várias unidades, mas nunca mais de uma vez dentro da mesma creche e ano. Esta etapa ainda não inclui concorrência, distância, capacidade relativa, substituição entre unidades ou modelo de escolha.", "BodyAudit"))
+    story.append(paragraph("D_bruta(i,t) = nº de crianças distintas que selecionam a unidade i em qualquer opção<br/>D_hat_bruta(i,2025) = A_hat(2025) × r_hat(i,2025)", "EquationAudit"))
     contract = [
-        ["Campo", "Frente 1", "Frente 2", "Regra"],
-        ["ano", "obrigatório", "obrigatório", "Ano letivo/processo, não ano de criação bruto."],
-        ["cod_territorio", "bairro na v0.1; microárea alvo", "origem da criança", "Uma tabela de ponte versionada."],
-        ["grupamento", "Bercario, Maternal I, Maternal II", "mesmo domínio", "Sem renomear silenciosamente."],
-        ["codigo_unidade", "não aparece no output granular", "obrigatório", "Entra somente na probabilidade condicional."],
-        ["a_hat", "média prevista", "insumo", "Nunca arredondar antes da soma."],
-        ["incerteza", "quantis/distribuição", "combinar com P_hat", "Evitar somar limites célula a célula como se fossem independentes."],
+        ["Campo", "Definição", "Uso nesta versão", "Regra"],
+        ["ano", "ano do processo", "2021–2024 treino; 2025 OOS", "2024 não é pontuado como OOS."],
+        ["codigo_unidade", "creche selecionada", "efeito fixo de unidade", "Uma linha final por creche continuante."],
+        ["demanda_observada", "crianças distintas por unidade", "alvo", "Conta qualquer opção; deduplica criança–unidade."],
+        ["prev_modelo", "PPML-FE com tendência", "previsão principal", "Escalado pelo total previsto de crianças."],
+        ["prev_persistencia", "taxa da unidade em 2024", "único benchmark", "Aplica a taxa anterior ao total previsto de 2025."],
     ]
     story.append(make_table(contract, [31 * mm, 43 * mm, 38 * mm, 62 * mm], font_size=7.2))
     story.append(Spacer(1, 9))
-    story.append(paragraph("Schema proposto para entrega", "H2Audit"))
-    story.append(paragraph("ano | cod_territorio | tipo_territorio | grupamento | e_hat | a_hat | p10 | p50 | p90 | modelo | data_corte | versao", "EquationAudit"))
-    story.append(callout("Auditoria antes da integração", "A soma de P_hat sobre unidades elegíveis deve ser 1 para cada (m,g,t). A Frente 1 deve reconciliar a soma de A_hat com seus totais publicados. O produto só é liberado quando ambas as identidades passarem."))
+    story.append(paragraph("Schema da entrega por unidade", "H2Audit"))
+    story.append(paragraph("ano_teste | codigo_unidade | nome_unidade | demanda_observada | prev_modelo | prev_persistencia | erro_abs_modelo | erro_abs_persistencia | vencedor", "EquationAudit"))
+    story.append(callout("Limite da entrega", "A Frente 2 não foi executada. Concorrência entre creches, distância, conjuntos de alternativas, capacidade e efeitos de abertura/fechamento ficam para uma etapa posterior. Como há múltiplas opções, a soma da demanda bruta entre unidades excede o total de crianças únicas."))
     story.append(PageBreak())
 
     # Reproducibility and references
@@ -611,11 +610,15 @@ def build_pdf():
         ["Artefato", "Função"],
         ["f1_est.py", "Leitura, deduplicação, painel, PPML, OOS, projeção e exportação."],
         ["results/f1_panel.csv", "Painel bairro × grupamento × ano construído sem sobrescrever originais."],
-        ["results/f1_oos_pred.csv", "Previsões célula a célula nos dois testes."],
+        ["results/f1_oos_pred.csv", "Previsões célula a célula no teste de 2025."],
         ["results/f1_oos.csv / .tex", "Tabela de métricas."],
         ["results/f1_prev_2026.csv", "Primeira projeção territorial completa."],
         ["results/f1_resumo_2026.csv / .tex", "Resumo por grupamento e total."],
         ["figures/f1_oos.png", "Figura usada nesta nota."],
+        ["f1c_est.py", "Alvo criança-unidade em qualquer opção e OOS por creche em 2025."],
+        ["results/f1c_oos_pred.csv", "Observado, PPML-FE e persistência para cada unidade continuante."],
+        ["results/f1c_oos.csv / .tex", "Métricas por unidade, ponta a ponta e condicionais ao total."],
+        ["figures/f1c_oos_2025.png", "Diagnóstico gráfico da comparação individual por creche."],
     ]
     story.append(make_table(files_table, [60 * mm, 114 * mm], font_size=7.2))
     story.append(Spacer(1, 8))

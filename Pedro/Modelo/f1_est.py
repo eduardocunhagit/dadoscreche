@@ -384,10 +384,9 @@ def main():
     neighborhood_dimension, births_long = load_births()
     panel, matched_child_years = build_panel(child_years, neighborhood_dimension, births_long)
 
-    oos_2024, metrics_2024 = run_oos(panel, train_end=2023, test_year=2024)
     oos_2025, metrics_2025 = run_oos(panel, train_end=2024, test_year=2025)
-    oos_predictions = pd.concat([oos_2024, oos_2025], ignore_index=True)
-    metrics = pd.DataFrame(metrics_2024 + metrics_2025)
+    oos_predictions = oos_2025.copy()
+    metrics = pd.DataFrame(metrics_2025)
 
     final_model, final_encoder, final_alpha, _ = fit_ppml(panel[panel["ano"] <= 2025])
     forecast_2026 = predict_model(
