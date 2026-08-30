@@ -22,18 +22,18 @@ Não precisa de Docker nem de Postgres — o banco de desenvolvimento é um
 arquivo SQLite (`dev.db`), criado na hora.
 
 ```bash
-npm install
-npm run db:migrate     # cria dev.db e aplica o schema
-npm run db:seed        # importa dados REAIS das CSVs do desafio + contas de demo — ~30s
-npm run dev             # http://localhost:3000
+npm install    # cria o .env sozinho (postinstall) — ver nota abaixo
+npm run setup  # gera o Prisma client, aplica as migrations e semeia — ~30s
+npm run dev    # http://localhost:3000
 ```
 
-Você vai precisar criar um `.env` na raiz de `fila-viva/` (não vem no git):
-
-```
-DATABASE_URL="file:./dev.db"
-AUTH_SECRET="qualquer-string-aleatoria-de-32-caracteres-aqui"
-```
+> **`.env`**: o `npm install` roda `scripts/setup-env.cjs` automaticamente
+> e cria `fila-viva/.env` com `DATABASE_URL` e um `AUTH_SECRET` aleatório —
+> não precisa criar isso à mão. Ele só faz isso se o arquivo ainda não
+> existir, então rodar `npm install` de novo não sobrescreve nada. Se
+> alguém acabar sem esse arquivo por qualquer motivo, o sintoma é login
+> quebrando com `"There was a problem with the server configuration"` —
+> rode `node scripts/setup-env.cjs` pra corrigir.
 
 Contas de demonstração (senha `demo1234` para todas):
 
@@ -44,7 +44,7 @@ Contas de demonstração (senha `demo1234` para todas):
 | `unidade@filaviva.rio` | Servidor da unidade | Uma unidade específica |
 | `responsavel@filaviva.rio` | Responsável | As próprias crianças |
 
-Para recomeçar do zero: `npm run db:reset && npm run db:seed`.
+Para recomeçar do zero: `npm run db:reset && npm run db:seed` (o `db:reset` some com todos os dados locais — se um agente de IA rodar isso, o Prisma vai pedir sua confirmação antes).
 
 ### O que o seed importa
 
@@ -72,9 +72,10 @@ sintéticos, claramente marcados como tal no código do seed.
 | `npm run dev` | Sobe o site em desenvolvimento |
 | `npm run build` | Build de produção |
 | `npm test` | Roda os testes (o motor de alocação é o mais importante) |
-| `npm run db:migrate` | Aplica migrations do Prisma |
-| `npm run db:seed` | Popula com dados reais + contas de demo |
-| `npm run db:reset` | Apaga e recria o banco do zero |
+| `npm run setup` | Tudo de uma vez: gera o client, aplica migrations, semeia |
+| `npm run db:migrate` | Só aplica migrations do Prisma |
+| `npm run db:seed` | Só popula com dados reais + contas de demo (~30s) |
+| `npm run db:reset` | Apaga e recria o banco do zero (pede confirmação se rodado por um agente de IA) |
 | `npx tsx scripts/simulador.ts` | Reprocessa a Query A real e mede o tamanho do problema que o Eixo 2 resolve — roda sem precisar do banco |
 
 ## O simulador — a evidência para o pitch
