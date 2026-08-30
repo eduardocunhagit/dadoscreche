@@ -156,6 +156,10 @@ model Unidade {
   usuarios Usuario[]
   opcoes   Opcao[]
   vagas    Vaga[]
+
+  // Relações virtuais dos satélites do módulo inscricao (sem coluna nova).
+  geo      InscUnidadeGeo?
+  demandas InscDemandaPrevista[]
 }
 
 model Vaga {
@@ -229,6 +233,11 @@ model Inscricao {
   opcoes    Opcao[]
   respostas Resposta[]
 
+  // Relações virtuais dos satélites do módulo inscricao — não são colunas
+  // novas na tabela (o Prisma exige o campo de volta aqui). Ver EXTENDING.md.
+  perfilInscricao   InscPerfilInscricao?
+  contextoSeguranca InscContextoSeguranca?
+
   @@unique([processoId, poloId, iplId])
   @@index([criancaId])
   @@index([responsavelId])
@@ -294,4 +303,80 @@ model Resposta {
   confirmado  String    // Sim | Nao
 
   @@unique([inscricaoId, perguntaId])
+}
+
+// ---------------------------------------------------------------------------
+// Satélites do módulo inscricao (fluxo "Nova inscrição" do responsável)
+// Convenção EXTENDING.md: prefixo Insc, nenhuma coluna nova em tabela do
+// núcleo. Toda escrita passa por src/modules/inscricao/servico.ts.
+// ---------------------------------------------------------------------------
+
+// Dados de identificação e endereço informados pelo responsável na
+// inscrição. CPF fica AQUI (satélite), nunca no núcleo — LGPD: acesso só
+// via serviço do módulo; a UI exibe apenas a máscara (mascararCpf).
+model InscPerfilInscricao {
+  id          String    @id @default(cuid())
+  inscricaoId String    @unique
+  inscricao   Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  cpfCrianca     String // normalizado (11 dígitos)
+  cpfResponsavel String
+
+  cepResidencia        String
+  logradouroResidencia String?
+  bairroResidencia     String?
+  latResidencia        Float?
+  lonResidencia        Float?
+  origemGeoResidencia  String // VIACEP_CENTROIDE | CENTROIDE_BAIRRO | INDISPONIVEL
+
+  cepTrabalho        String?
+  logradouroTrabalho String?
+  bairroTrabalho     String?
+  latTrabalho        Float?
+  lonTrabalho        Float?
+  origemGeoTrabalho  String?
+
+  criadoEm DateTime @default(now())
+}
+
+// RESTRITO — contexto de segurança territorial declarado pela família.
+// Nunca exibido a SERVIDOR_UNIDADE / SERVIDOR_CRE; para GESTOR_SME só
+// agregado com piso de supressão n>=5 (contarContextoSegurancaAgregado).
+// Usado apenas para orientar a família na escolha de creche.
+model InscContextoSeguranca {
+  id                String    @id @default(cuid())
+  inscricaoId       String    @unique
+  inscricao         Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  areaSobInfluencia Boolean
+  faccaoRelatada    String? // texto livre, opcional — só se a família quiser informar
+  criadoEm          DateTime  @default(now())
+}
+
+// Coordenadas das unidades. Fonte primária: prisma/dados/creches_2025.csv
+// (geocodificação do Pedro, branch pedro); fallback: centroide do bairro.
+// plmId = coluna `cre` do CSV — usado para derivar o polo da inscrição nova.
+model InscUnidadeGeo {
+  unidadeEscCodigo String   @id
+  unidade          Unidade  @relation(fields: [unidadeEscCodigo], references: [escCodigo])
+  latitude         Float
+  longitude        Float
+  plmId            Int?
+  origem           String // CSV_PEDRO | CENTROIDE_BAIRRO
+  atualizadoEm     DateTime @updatedAt
+}
+
+// Demanda prevista por unidade — desenhada para trocar a fonte sem tocar a
+// UI: hoje `classe_pressao_2025` (pressão de fila observada, placeholder),
+// amanhã `modelo_f2` (modelo probabilístico do Pedro/Edu).
+model InscDemandaPrevista {
+  id               String   @id @default(cuid())
+  unidadeEscCodigo String
+  unidade          Unidade  @relation(fields: [unidadeEscCodigo], references: [escCodigo])
+  ano              Int
+  fonte            String // classe_pressao_2025 | modelo_f2
+  classe           String // ALTA | MEDIA | BAIXA
+  valor            Float? // valor numérico do modelo, quando houver
+  importadoEm      DateTime @default(now())
+
+  @@unique([unidadeEscCodigo, ano, fonte])
 }
