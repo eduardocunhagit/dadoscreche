@@ -6,6 +6,8 @@ Este diretório contém o resultado utilizável da Frente 1 e os insumos necess�
 
 Para uma análise da pressão de demanda observada em 2025, use `demanda_bruta_2025.csv` como tabela principal. A variável `demanda_observada` conta uma criança uma vez em cada creche que ela selecionou, independentemente da posição da opção ou da situação posterior da inscrição.
 
+Se for conveniente trabalhar com uma única tabela creche–ano, use `demanda_bruta_cag_fem_2021_2025.csv`. Ela preserva `demanda_observada` como variável dependente e acrescenta as colunas do CAGED feminino pré-corte. O indicador CAGED é municipal: dentro de um mesmo ano, seu valor se repete para todas as creches. Portanto, ele ajuda a ajustar a escala temporal da demanda, mas não explica diferenças de demanda entre creches no mesmo ano.
+
 Para construir concorrência ou co-seleção entre creches, use `pares_crianca_creche_2025.csv`. Cada linha representa um par distinto criança–creche. Creches escolhidas pela mesma `aluno_anon` podem ser conectadas para construir uma rede de concorrência. Esse arquivo não é, sozinho, um conjunto de escolha causal: inscrições repetidas da mesma criança foram consolidadas no ano.
 
 Para comparar previsões, use `validacao_oos_2025.csv`:
@@ -57,6 +59,7 @@ No OOS de 2025, `tendencia = 4` e a exposição prevista é 65.114,2646 criança
 ## Arquivos
 
 - `demanda_bruta_2021_2025.csv`: histórico agregado por ano e creche;
+- `demanda_bruta_cag_fem_2021_2025.csv`: mesmo painel com o CAGED feminino pré-corte já mesclado;
 - `demanda_bruta_2025.csv`: resultado bruto principal, incluindo 836 creches;
 - `pares_crianca_creche_2025.csv`: 155.312 pares distintos para co-seleção;
 - `validacao_oos_2025.csv`: previsões comparáveis em 834 creches continuantes;

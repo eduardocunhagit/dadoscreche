@@ -244,11 +244,23 @@ def main():
         CAGED_DIR / "coef_unidades.csv", dtype={"codigo_unidade": "string"}
     )
     caged_feature = pd.read_csv(CAGED_DIR / "cag_fem_feat.csv")
+    caged_main_feature = caged_feature[caged_feature["mes_corte"].eq(9)].copy()
+    caged_main_feature = caged_main_feature.drop(columns=["cenario_corte"])
+    gross_demand_with_caged = history.merge(
+        caged_main_feature,
+        how="left",
+        left_on="ano",
+        right_on="ano_alvo",
+        validate="many_to_one",
+    )
+    if gross_demand_with_caged["cag_fem_taxa"].isna().any():
+        raise ValueError("Missing female CAGED feature in the 2021-2025 gross-demand panel.")
     forecast_2026 = pd.read_csv(RESULTS_DIR / "f1_prev_2026.csv")
     summary_2026 = pd.read_csv(RESULTS_DIR / "f1_resumo_2026.csv")
 
     outputs = {
         "demanda_bruta_2021_2025.csv": history,
+        "demanda_bruta_cag_fem_2021_2025.csv": gross_demand_with_caged,
         "demanda_bruta_2025.csv": demand_2025,
         "pares_crianca_creche_2025.csv": selected_edges,
         "validacao_oos_2025.csv": validation,
