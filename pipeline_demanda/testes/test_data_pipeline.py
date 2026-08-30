@@ -2,12 +2,12 @@ import unittest
 
 import pandas as pd
 
-from frente2.rotinas.episodes import build_choice_episodes
-from frente2.rotinas.historical import aggregate_historical_demand
-from frente2.rotinas.io import prepare_query_a
-from frente2.rotinas.normalization import normalize_code, normalize_text
-from frente2.rotinas.splits import STANDARD_FOLDS, split_temporal
-from frente2.rotinas.validation import assert_choice_invariants, check_choice_invariants
+from pipeline_demanda.rotinas.episodes import build_choice_episodes
+from pipeline_demanda.rotinas.historical import aggregate_historical_demand
+from pipeline_demanda.rotinas.io import prepare_query_a
+from pipeline_demanda.rotinas.normalization import normalize_code, normalize_text
+from pipeline_demanda.rotinas.splits import STANDARD_FOLDS, split_temporal
+from pipeline_demanda.rotinas.validation import assert_choice_invariants, check_choice_invariants
 
 
 def synthetic_raw() -> pd.DataFrame:

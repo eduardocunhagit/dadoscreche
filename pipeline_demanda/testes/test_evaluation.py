@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from frente2.rotinas.evaluation import (
+from pipeline_demanda.rotinas.evaluation import (
     choice_metrics,
     default_model_factories,
     run_temporal_evaluation,

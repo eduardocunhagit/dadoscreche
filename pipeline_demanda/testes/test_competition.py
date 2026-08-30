@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from frente2.rotinas.competition import build_colisting_network, colisting_competition
+from pipeline_demanda.rotinas.competition import build_colisting_network, colisting_competition
 
 
 class CompetitionTests(unittest.TestCase):

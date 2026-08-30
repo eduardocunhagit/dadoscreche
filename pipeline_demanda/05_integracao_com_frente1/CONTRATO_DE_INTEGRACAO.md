@@ -45,7 +45,7 @@ A soma da demanda prevista sobre alternativas deve reproduzir o total da Frente 
 ## Comando
 
 ```powershell
-python frente2/integrar_frentes.py `
+python pipeline_demanda/integrar_frentes.py `
   --frente1 caminho/previsao_frente1.csv `
   --frente2 caminho/participacoes_frente2.csv `
   --saida caminho/demanda_integrada.csv

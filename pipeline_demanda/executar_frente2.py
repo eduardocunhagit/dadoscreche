@@ -29,8 +29,8 @@ ROOT = Path(__file__).resolve().parents[1]
 QUERY_A = ROOT / "Bases IC_ ClassificadoseFila" / "01_QueryA_InscricoesPorAno.csv.gz"
 QUERY_D = ROOT / "Bases IC_ ClassificadoseFila" / "04_UnidadesEscolaresComEndereco.csv"
 LOCATIONS = ROOT / "OferecimentosEvagas" / "Unidades_Unificadas_com_Localizacao.xlsx"
-OUT = ROOT / "frente2" / "06_resultados" / "arquivos_gerados"
-FRONTEND_RESULTS = ROOT / "frente2" / "07_painel" / "public" / "results.json"
+OUT = ROOT / "pipeline_demanda" / "06_resultados" / "arquivos_gerados"
+FRONTEND_RESULTS = ROOT / "pipeline_demanda" / "07_painel" / "public" / "results.json"
 MARKET = ["ano", "origin_area", "grupamento_norm"]
 
 

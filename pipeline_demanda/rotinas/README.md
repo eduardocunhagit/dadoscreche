@@ -86,5 +86,5 @@ benchmark; o modelo completo só é melhor se a comparação OOS mostrar isso.
 Sem dependências além de NumPy e pandas:
 
 ```powershell
-python -m unittest discover -s frente2/testes -v
+python -m unittest discover -s pipeline_demanda/testes -v
 ```
