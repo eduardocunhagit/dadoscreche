@@ -353,7 +353,7 @@ model InscContextoSeguranca {
 }
 
 // Coordenadas das unidades. Fonte primária: prisma/dados/creches_2025.csv
-// (geocodificação do Pedro, branch pedro); fallback: centroide do bairro.
+// (geocodificação versionada no Fila Viva); fallback: centroide do bairro.
 // plmId = coluna `cre` do CSV — usado para derivar o polo da inscrição nova.
 model InscUnidadeGeo {
   unidadeEscCodigo String   @id
@@ -361,13 +361,13 @@ model InscUnidadeGeo {
   latitude         Float
   longitude        Float
   plmId            Int?
-  origem           String // CSV_PEDRO | CENTROIDE_BAIRRO
+  origem           String // CSV_GEOCODIFICACAO | CENTROIDE_BAIRRO
   atualizadoEm     DateTime @updatedAt
 }
 
 // Demanda prevista por unidade — desenhada para trocar a fonte sem tocar a
 // UI: hoje `classe_pressao_2025` (pressão de fila observada, placeholder),
-// amanhã `modelo_f2` (modelo probabilístico do Pedro/Edu).
+// amanhã `modelo_f2` (modelo probabilístico integrado).
 model InscDemandaPrevista {
   id               String   @id @default(cuid())
   unidadeEscCodigo String
@@ -379,4 +379,43 @@ model InscDemandaPrevista {
   importadoEm      DateTime @default(now())
 
   @@unique([unidadeEscCodigo, ano, fonte])
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp demo messaging module
+// ---------------------------------------------------------------------------
+
+// These satellite tables intentionally keep scalar references to core records.
+// The module can evolve without adding fields to Crianca, Contato, or Usuario.
+model MsgConversa {
+  id           String   @id @default(cuid())
+  criancaId    String
+  contatoId    String
+  nomeContato  String
+  telefone     String
+  status       String   @default("ENVIADA") // ENVIADA | RESPONDIDA | ERRO
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  mensagens MsgMensagem[]
+
+  @@unique([criancaId, contatoId])
+  @@index([criancaId])
+  @@map("msg_conversa")
+}
+
+model MsgMensagem {
+  id               String      @id @default(cuid())
+  conversaId       String
+  conversa         MsgConversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  direcao          String // SAIDA | ENTRADA
+  conteudo         String
+  status           String // ENVIADA | RECEBIDA | ERRO
+  autorUsuarioId   String?
+  classificacao    String?
+  sugestaoResposta String?
+  criadaEm         DateTime    @default(now())
+
+  @@index([conversaId, criadaEm])
+  @@map("msg_mensagem")
 }
