@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from frente2.rotinas.models import (
+from pipeline_demanda.rotinas.models import (
     ConditionalLogit,
     HistoricalShareBenchmark,
     NearestUnitBenchmark,

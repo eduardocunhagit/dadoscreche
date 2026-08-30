@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from frente2.integrar_frentes import integrar
+from pipeline_demanda.integrar_frentes import integrar
 
 
 class IntegracaoFrentesTest(unittest.TestCase):

@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from frente2.executar_frente2 import CountConditionalLogit, softmax
+from pipeline_demanda.executar_frente2 import CountConditionalLogit, softmax
 
 
 class CompletePipelineTests(unittest.TestCase):

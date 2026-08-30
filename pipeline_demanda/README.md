@@ -11,7 +11,7 @@ A alocação legal vem depois. O modelo de demanda não altera prioridade, desem
 ## Organização
 
 ~~~text
-frente2/
+pipeline_demanda/
 ├── 01_problema_e_estimando/          pergunta econômica, estimando e contrato das saídas
 ├── 02_universo_de_escolha/           mercados, alternativas e geografia
 ├── 03_preferencias_e_concorrencia/   modelos de escolha e medidas de concorrência
@@ -44,20 +44,20 @@ Os logits são lineares e seus coeficientes são exportados com erro-padrão rob
 ## Execução
 
 ~~~powershell
-python frente2/executar_frente2.py
-python -m unittest discover -s frente2/testes -v
+python pipeline_demanda/executar_frente2.py
+python -m unittest discover -s pipeline_demanda/testes -v
 ~~~
 
 Integração com a Frente 1:
 
 ~~~powershell
-python frente2/integrar_frentes.py --frente1 caminho/previsao_frente1.csv --frente2 caminho/participacoes_frente2.csv --saida frente2/06_resultados/arquivos_gerados/demanda_integrada.csv
+python pipeline_demanda/integrar_frentes.py --frente1 caminho/previsao_frente1.csv --frente2 caminho/participacoes_frente2.csv --saida pipeline_demanda/06_resultados/arquivos_gerados/demanda_integrada.csv
 ~~~
 
 Painel:
 
 ~~~powershell
-cd frente2/07_painel
+cd pipeline_demanda/07_painel
 npm install
 npm run dev
 ~~~
@@ -74,9 +74,9 @@ npm run dev
 A raiz contém alterações que não pertencem necessariamente à Frente 2. Para preparar apenas esta entrega:
 
 ~~~powershell
-git status --short -- frente2
-git diff --check -- frente2
-git add frente2
+git status --short -- pipeline_demanda
+git diff --check -- pipeline_demanda
+git add pipeline_demanda
 git commit -m "feat: estima demanda entre creches e integra frentes"
 git push
 ~~~
