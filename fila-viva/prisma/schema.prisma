@@ -1,0 +1,297 @@
+// Fila Viva — schema do núcleo (core/).
+// Convenção do projeto: tabelas do núcleo NUNCA ganham coluna nova para servir
+// um módulo. Um módulo que precisa de dado extra cria uma tabela satélite
+// 1:1 com o prefixo do módulo (ex.: `conv_...`). Veja EXTENDING.md.
+//
+// Chaves de compatibilidade com as bases reais da SME (Query A-D) são
+// guardadas como colunas de verdade (prmId, plmId, iplId, escCodigo,
+// pergId, ichPergId) para que importar/exportar no formato original seja
+// mapeamento direto.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Identidade e acesso
+// ---------------------------------------------------------------------------
+
+// Papéis como String (não enum nativo) por dois motivos: SQLite não tem tipo
+// enum, e strings ficam idênticas ao trocar para Postgres depois. As listas
+// de valores válidos vivem em src/core/domain/constants.ts.
+model Usuario {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  senhaHash     String
+  papel         String // RESPONSAVEL | SERVIDOR_UNIDADE | SERVIDOR_CRE | GESTOR_SME
+  nomeExibicao  String
+
+  // Escopo de acesso — preenchido conforme o papel.
+  responsavelId String?  @unique
+  responsavel   Responsavel? @relation(fields: [responsavelId], references: [id])
+  poloId        String? // SERVIDOR_CRE: enxerga só este polo (uma das 11 CREs)
+  polo          Polo?    @relation(fields: [poloId], references: [id])
+  unidadeEscCodigo String? // SERVIDOR_UNIDADE: enxerga só esta unidade
+  unidade       Unidade? @relation(fields: [unidadeEscCodigo], references: [escCodigo])
+
+  criadoEm      DateTime @default(now())
+
+  eventosComoAutor OfertaEvento[]
+  historicoComoAutor ContatoHistorico[]
+}
+
+// ---------------------------------------------------------------------------
+// Pessoas
+// ---------------------------------------------------------------------------
+
+model Responsavel {
+  id               String   @id @default(cuid())
+  responsavelAnon  String   @unique // ex.: responsavel_0310813 — chave da extração anonimizada
+  nomeExibicao     String   // placeholder de demo; a base real não expõe nome
+  criadoEm         DateTime @default(now())
+
+  usuario          Usuario?
+  criancas         Crianca[]
+  inscricoes       Inscricao[]
+  contatosEditados ContatoHistorico[] @relation("EditorResponsavel")
+}
+
+model Crianca {
+  id                      String    @id @default(cuid())
+  alunoAnon               String    @unique // ex.: aluno_0167497
+  nomeExibicao            String    // placeholder de demo
+  sexo                    String    // M | F
+  nascimentoAnoMes        String    // yyyy-MM — generalizado por privacidade na origem
+  responsavelPrincipalId  String
+  responsavelPrincipal    Responsavel @relation(fields: [responsavelPrincipalId], references: [id])
+
+  // Declaração explícita de que a família não tem contato alternativo a informar.
+  // Ver módulo perfil-contatos: isso é sinal de risco para a CRE, não pendência.
+  semContatoAlternativoDeclarado   Boolean   @default(false)
+  semContatoAlternativoDeclaradoEm DateTime?
+
+  criadoEm                DateTime  @default(now())
+
+  contatos    Contato[]
+  inscricoes  Inscricao[]
+
+  @@index([responsavelPrincipalId])
+}
+
+// ---------------------------------------------------------------------------
+// Rede de contatos (módulo perfil-contatos — responsabilidade desta pessoa)
+// ---------------------------------------------------------------------------
+
+model Contato {
+  id               String    @id @default(cuid())
+  criancaId        String
+  crianca          Crianca   @relation(fields: [criancaId], references: [id], onDelete: Cascade)
+
+  papel            String    // RESPONSAVEL | ALTERNATIVO
+  nomeContato      String?   // obrigatório para ALTERNATIVO (ex.: "Avó — Maria")
+  parentesco       String?   // obrigatório para ALTERNATIVO
+  canal            String    // TELEFONE | WHATSAPP | EMAIL | SMS
+  valor            String
+  ordemTentativa   Int       @default(1)
+
+  verificadoEm     DateTime?
+  consentimentoEm  DateTime? // obrigatório para ALTERNATIVO — LGPD, dado de terceiro
+  ativo            Boolean   @default(true)
+
+  criadoEm         DateTime  @default(now())
+  atualizadoEm     DateTime  @updatedAt
+
+  historico        ContatoHistorico[]
+
+  @@index([criancaId])
+}
+
+model ContatoHistorico {
+  id             String   @id @default(cuid())
+  contatoId      String
+  contato        Contato  @relation(fields: [contatoId], references: [id], onDelete: Cascade)
+
+  autorUsuarioId String?
+  autorUsuario   Usuario? @relation(fields: [autorUsuarioId], references: [id])
+  autorResponsavelId String?
+  autorResponsavel   Responsavel? @relation("EditorResponsavel", fields: [autorResponsavelId], references: [id])
+  autorPapel     String   // papel de quem editou, congelado no momento da edição
+
+  campo          String   // valor | canal | ordemTentativa | ativo | verificadoEm
+  valorAntes     String?
+  valorDepois    String?
+  quando         DateTime @default(now())
+
+  @@index([contatoId])
+}
+
+// ---------------------------------------------------------------------------
+// Território e unidades
+// ---------------------------------------------------------------------------
+
+model Polo {
+  id     String @id @default(cuid())
+  plmId  Int    @unique // 1..11 na extração real — as 11 CREs
+  nome   String // "CRE 1" etc.
+
+  usuarios   Usuario[]
+  inscricoes Inscricao[]
+}
+
+model Unidade {
+  escCodigo    String @id // código da unidade — chave real da extração (Query D)
+  nome         String
+  tipoGestao   String // DIRETA | CONVENIADA | PARCERIA
+  logradouro   String?
+  numero       String?
+  complemento  String?
+  bairro       String?
+  cep          String?
+
+  usuarios Usuario[]
+  opcoes   Opcao[]
+  vagas    Vaga[]
+}
+
+model Vaga {
+  id           String  @id @default(cuid())
+  unidadeEscCodigo String
+  unidade      Unidade @relation(fields: [unidadeEscCodigo], references: [escCodigo])
+  ano          Int
+  grupamento   String
+  turno        String
+  capacidade   Int
+
+  @@unique([unidadeEscCodigo, ano, grupamento, turno])
+}
+
+// ---------------------------------------------------------------------------
+// Processo seletivo e régua de pontuação
+// ---------------------------------------------------------------------------
+
+model Processo {
+  id      String @id @default(cuid())
+  ano     Int    @unique
+  prmId   Int    @unique
+  nome    String // ex.: "Inscrição Creche 2025"
+
+  // Flags do motor de alocação (Eixo 2) — por processo, nunca globais, para
+  // a SME poder adotar uma regra sem adotar a outra e o simulador comparar
+  // os cenários. Ver src/core/domain/motor.ts.
+  liberacaoEmCascata Boolean @default(false)
+  aceiteCondicional  Boolean @default(false)
+  janelaCondicionalDias Int  @default(30)
+
+  perguntas  Pergunta[]
+  inscricoes Inscricao[]
+}
+
+model Pergunta {
+  id                 String   @id @default(cuid())
+  processoId         String
+  processo           Processo @relation(fields: [processoId], references: [id])
+  ichPergId          Int      @unique // liga com Resposta — muda a cada processo
+  pergId             Int      // estável entre anos, para comparar a mesma pergunta
+  texto              String
+  ordemVisualizacao  Int
+  pontuacao          Int
+  criterioDesempate  Boolean  @default(false) // perg_criterio = 'Sim' na origem
+
+  respostas Resposta[]
+}
+
+// ---------------------------------------------------------------------------
+// Inscrição, opções e respostas
+// ---------------------------------------------------------------------------
+
+model Inscricao {
+  id              String   @id @default(cuid())
+  processoId      String
+  processo        Processo @relation(fields: [processoId], references: [id])
+  poloId          String
+  polo            Polo     @relation(fields: [poloId], references: [id])
+  iplId           Int      // id da inscrição dentro do polo, na origem
+
+  criancaId       String
+  crianca         Crianca  @relation(fields: [criancaId], references: [id])
+  responsavelId   String
+  responsavel     Responsavel @relation(fields: [responsavelId], references: [id])
+
+  dataCriacao     DateTime
+  cepResponsavel  String?
+  bairroResponsavel String?
+
+  opcoes    Opcao[]
+  respostas Resposta[]
+
+  @@unique([processoId, poloId, iplId])
+  @@index([criancaId])
+  @@index([responsavelId])
+}
+
+// Estados possíveis de `Opcao.estado` — ver src/core/domain/constants.ts:
+// NA_FILA | OFERTADA | ACEITA_CONDICIONAL | ACEITA_DEFINITIVA |
+// POSICAO_SUSPENSA | RECUSADA | EXPIRADA | ENCERRADA
+model Opcao {
+  id              String    @id @default(cuid())
+  inscricaoId     String
+  inscricao       Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  ordem           Int       // 1ª a 5ª opção, na ordem de preferência da família
+  unidadeEscCodigo String
+  unidade         Unidade   @relation(fields: [unidadeEscCodigo], references: [escCodigo])
+  grupamento      String    // Berçário | Maternal I | Maternal II
+  turno           String    // Integral | Parcial
+
+  estado          String    @default("NA_FILA")
+  situacaoOriginal String?  // valor bruto importado da extração, para auditoria/migração
+
+  ofertaAbertaEm  DateTime? // início do prazo de confirmação da oferta corrente
+  ofertaPrazo     DateTime?
+
+  criadoEm        DateTime  @default(now())
+
+  eventos OfertaEvento[]
+
+  @@unique([inscricaoId, ordem])
+  @@index([unidadeEscCodigo, grupamento, turno])
+}
+
+// Append-only: toda transição de estado de uma opção gera uma linha aqui.
+// É esta tabela que responde "há quanto tempo esta vaga está esperando
+// confirmação" — o gap nº 1 do briefing, que a base histórica não responde.
+model OfertaEvento {
+  id             String   @id @default(cuid())
+  opcaoId        String
+  opcao          Opcao    @relation(fields: [opcaoId], references: [id], onDelete: Cascade)
+
+  estadoAnterior String
+  estadoNovo     String
+  autorUsuarioId String?
+  autorUsuario   Usuario? @relation(fields: [autorUsuarioId], references: [id])
+  autorPapel     String   // SISTEMA | RESPONSAVEL | SERVIDOR_UNIDADE | SERVIDOR_CRE
+  canal          String?  // TELEFONE | WHATSAPP | EMAIL | SMS | PRESENCIAL | null
+  observacao     String?
+
+  quando         DateTime @default(now())
+
+  @@index([opcaoId])
+}
+
+model Resposta {
+  id          String    @id @default(cuid())
+  inscricaoId String
+  inscricao   Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  perguntaId  String
+  pergunta    Pergunta  @relation(fields: [perguntaId], references: [id])
+
+  resposta    String    // Sim | Nao
+  confirmado  String    // Sim | Nao
+
+  @@unique([inscricaoId, perguntaId])
+}
