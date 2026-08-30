@@ -1,0 +1,2 @@
+﻿modelo,intercepto,coef_tendencia,ridge_alpha,inicio_treino,fim_treino,ano_oos,exposicao_prevista_2025,n_unidades
+PPML-FE unidade base,-5.317493042717188,-0.18364698236732876,1e-08,2021,2024,2025,65114.26455375522,834
