@@ -16,7 +16,7 @@ from folium.plugins import Fullscreen, HeatMap
 
 
 REFERENCE_YEAR = 2025
-REPOSITORY_ROOT = Path(r"C:\Users\pedro\Documents\2026\ClaudeImpactLab2")
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PEDRO_DIR = REPOSITORY_ROOT / "Pedro"
 OUTPUT_DIR = PEDRO_DIR / "output"
 
@@ -530,6 +530,7 @@ def build_panel() -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
         panel["matriculas_total"].gt(0)
         | panel["demanda_historica"].gt(0)
         | panel["fila_total"].gt(0)
+        | panel["demanda_prevista_efetiva"].notna()
         | panel["tipo_oferta"].isin(["Parceira", "Pública e parceira"])
     )
     panel = panel.loc[active_mask].copy()
@@ -679,8 +680,16 @@ def build_panel() -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
         ),
         "criancas_em_fila_mapeadas_por_unidade": int(located["fila_total"].sum()),
         "unidades_com_fila": int(located["fila_total"].gt(0).sum()),
-        "f1_disponivel": bool(located["demanda_prevista_inscritos"].notna().any()),
-        "f2_disponivel": bool(located["demanda_prevista_efetiva"].notna().any()),
+        "inscritos_previstos_disponivel": bool(located["demanda_prevista_inscritos"].notna().any()),
+        "demanda_efetiva_disponivel": bool(located["demanda_prevista_efetiva"].notna().any()),
+        "ano_previsao": int(predicted_demand["ano_previsao"].dropna().max()) if predicted_demand["ano_previsao"].notna().any() else None,
+        "unidades_com_previsao": int(panel["demanda_prevista_efetiva"].notna().sum()),
+        "unidades_previsao_sem_correspondencia_codigo": int(len(set(predicted_demand["codigo"]) - set(panel["codigo"]))),
+        "unidades_previsao_sem_coordenada": int(unmatched["demanda_prevista_efetiva"].notna().sum()),
+        "demanda_efetiva_total_prevista": float(panel["demanda_prevista_efetiva"].sum()),
+        "gaps_positivos": int(panel["gap_pressao_efetiva"].gt(0).sum()) if panel["gap_pressao_efetiva"].notna().any() else None,
+        "gaps_negativos": int(panel["gap_pressao_efetiva"].lt(0).sum()) if panel["gap_pressao_efetiva"].notna().any() else None,
+        "gaps_significativos_95": int(panel["gap_significativo_95"].sum()) if panel[["gap_pressao_p025", "gap_pressao_p975"]].notna().all(axis=1).any() else None,
         "pressao_prevista_disponivel": bool(located["gap_pressao_efetiva"].notna().any()),
         "ic_95_disponivel": bool(
             located[["gap_pressao_p025", "gap_pressao_p975"]].notna().all(axis=1).any()
@@ -760,8 +769,8 @@ def build_popup(row: pd.Series) -> str:
           <tr><td>Matrículas</td><td style="text-align:right"><strong>{format_integer(row['matriculas_total'])}</strong></td></tr>
           <tr><td>Demanda histórica — qualquer opção</td><td style="text-align:right"><strong>{format_integer(row['demanda_historica'])}</strong></td></tr>
           <tr><td>Demanda histórica por 100 matriculados</td><td style="text-align:right">{format_ratio(row['demanda_hist_por_100_matriculas'])}</td></tr>
-          <tr><td>Inscritos previstos — Frente 1 ({forecast_year})</td><td style="text-align:right"><strong>{format_integer(row['demanda_prevista_inscritos'])}</strong></td></tr>
-          <tr><td>Demanda efetiva prevista — Frente 2</td><td style="text-align:right"><strong>{format_integer(row['demanda_prevista_efetiva'])}</strong></td></tr>
+          <tr><td>Inscritos previstos ({forecast_year})</td><td style="text-align:right"><strong>{format_integer(row['demanda_prevista_inscritos'])}</strong></td></tr>
+          <tr><td>Demanda efetiva prevista ({forecast_year})</td><td style="text-align:right"><strong>{format_integer(row['demanda_prevista_efetiva'])}</strong></td></tr>
           <tr><td>IC 95% da demanda efetiva</td><td style="text-align:right">[{format_integer(row['demanda_efetiva_p025'])}; {format_integer(row['demanda_efetiva_p975'])}]</td></tr>
           <tr><td>Capacidade do ano anterior</td><td style="text-align:right">{format_integer(row['capacidade_ano_anterior'])}</td></tr>
           <tr><td>Pressão efetiva prevista</td><td style="text-align:right"><strong>{format_integer(row['gap_pressao_efetiva'])}</strong></td></tr>
@@ -845,21 +854,21 @@ def add_demand_mode_control(
     availability: dict[str, bool],
 ) -> None:
     """Add four demand modes and an optional 95% significant-gap filter."""
-    f1_disabled = "" if availability["f1"] else "disabled"
-    f2_disabled = "" if availability["f2"] else "disabled"
+    applicants_disabled = "" if availability["applicants"] else "disabled"
+    effective_disabled = "" if availability["effective"] else "disabled"
     pressure_disabled = "" if availability["pressure"] else "disabled"
     significance_disabled = "" if availability["interval"] else "disabled"
     forecast_note = html.escape(
         "Previsões carregadas"
-        if availability["f1"] or availability["f2"]
+        if availability["applicants"] or availability["effective"]
         else f"Aguardando {PREDICTED_DEMAND_FILE.name}"
     )
     control = f"""
     <div style="position:fixed;top:76px;left:12px;z-index:9999;background:rgba(255,255,255,.96);padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font:12px Arial,sans-serif;color:#111827;box-shadow:0 1px 4px rgba(0,0,0,.18);max-width:255px">
       <div style="font-weight:700;margin-bottom:6px">Indicador de demanda</div>
       <label style="display:block;margin-bottom:4px"><input type="radio" name="demand-mode" checked onclick="setDemandMode('historica')"> Demanda histórica</label>
-      <label style="display:block;margin-bottom:4px"><input type="radio" name="demand-mode" {f1_disabled} onclick="setDemandMode('inscritos')"> Inscritos previstos — Frente 1</label>
-      <label style="display:block;margin-bottom:4px"><input type="radio" name="demand-mode" {f2_disabled} onclick="setDemandMode('efetiva')"> Demanda efetiva — Frente 2</label>
+      <label style="display:block;margin-bottom:4px"><input type="radio" name="demand-mode" {applicants_disabled} onclick="setDemandMode('inscritos')"> Inscritos previstos por unidade</label>
+      <label style="display:block;margin-bottom:4px"><input type="radio" name="demand-mode" {effective_disabled} onclick="setDemandMode('efetiva')"> Demanda efetiva prevista (2026)</label>
       <label style="display:block;margin-bottom:7px"><input type="radio" name="demand-mode" {pressure_disabled} onclick="setDemandMode('pressao')"> Pressão efetiva prevista</label>
       <div style="border-top:1px solid #e5e7eb;padding-top:7px">
         <label style="display:block"><input id="significant-gap-only" type="checkbox" {significance_disabled} onclick="setSignificanceFilter(this.checked)"> Apenas gaps significativos (IC 95%)</label>
@@ -939,8 +948,8 @@ def add_demand_mode_control(
       const significance = document.getElementById('significant-gap-only');
       const labels = {{
         historica: ['Demanda histórica (benchmark)', 'Círculo maior = mais crianças–unidade', 'Cor = pressão da lista de espera'],
-        inscritos: ['Inscritos previstos — Frente 1', 'Círculo maior = mais inscritos previstos', 'Cor = previsão da Frente 1'],
-        efetiva: ['Demanda efetiva — Frente 2', 'Círculo maior = mais demanda efetiva', 'Cor = previsão da Frente 2'],
+        inscritos: ['Inscritos previstos por unidade', 'Círculo maior = mais inscritos previstos', 'Cor = previsão de inscritos'],
+        efetiva: ['Demanda efetiva prevista (2026)', 'Círculo maior = mais demanda efetiva', 'Cor = previsão do modelo integrado'],
         pressao: ['Pressão efetiva prevista', 'Círculo maior = maior gap absoluto', 'Vermelho = excesso de demanda; azul = capacidade excedente']
       }};
       if (label) label.textContent = labels[currentDemandMode][0];
@@ -1013,8 +1022,8 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
         color = pressure_color(row["classe_pressao_fila"])
         tooltip = (
             f"{row['nome']} | Demanda histórica: {format_integer(row['demanda_historica'])} | "
-            f"Frente 1: {format_integer(row['demanda_prevista_inscritos'])} | "
-            f"Frente 2: {format_integer(row['demanda_prevista_efetiva'])} | "
+            f"Inscritos previstos: {format_integer(row['demanda_prevista_inscritos'])} | "
+            f"Demanda efetiva prevista: {format_integer(row['demanda_prevista_efetiva'])} | "
             f"Gap efetivo: {format_integer(row['gap_pressao_efetiva'])}"
         )
         marker = folium.CircleMarker(
@@ -1088,7 +1097,7 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
     if not front1_heat.empty:
         HeatMap(
             data=front1_heat.values.tolist(),
-            name="Calor dos inscritos previstos — Frente 1",
+            name="Calor dos inscritos previstos",
             radius=22,
             blur=20,
             min_opacity=0.25,
@@ -1102,7 +1111,7 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
     if not front2_heat.empty:
         HeatMap(
             data=front2_heat.values.tolist(),
-            name="Calor da demanda efetiva — Frente 2",
+            name="Calor da demanda efetiva prevista",
             radius=22,
             blur=20,
             min_opacity=0.25,
@@ -1143,8 +1152,8 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
         map_object,
         marker_configuration,
         {
-            "f1": bool(summary["f1_disponivel"]),
-            "f2": bool(summary["f2_disponivel"]),
+            "applicants": bool(summary["inscritos_previstos_disponivel"]),
+            "effective": bool(summary["demanda_efetiva_disponivel"]),
             "pressure": bool(summary["pressao_prevista_disponivel"]),
             "interval": bool(summary["ic_95_disponivel"]),
         },
@@ -1154,7 +1163,7 @@ def create_map(located: pd.DataFrame, summary: dict[str, object]) -> None:
 
     title = """
     <div style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9998;background:rgba(255,255,255,0.94);padding:8px 14px;border-radius:6px;border:1px solid #d1d5db;font:14px Arial,sans-serif;color:#111827;box-shadow:0 1px 4px rgba(0,0,0,.14)">
-      <strong>Creches do Rio — pressão de demanda por unidade (2025)</strong>
+      <strong>Creches do Rio — demanda observada em 2025 e prevista para 2026</strong>
     </div>
     """
     map_object.get_root().html.add_child(Element(title))
