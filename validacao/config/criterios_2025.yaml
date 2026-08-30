@@ -1,0 +1,153 @@
+# Gerado a partir de 03_QueryC_PerguntasComDescricao.csv -- nao editar a mao.
+# Regenerar com: python -m validacao.gerador.criterios
+ano: 2025
+prm_id: 195
+versao_regras: v1
+criterios:
+- perg_id: 28
+  ich_perg_id: 275
+  texto: Criança cuja família seja inscrita no CadÚnico (Cadastro Único para Programas Sociais)?
+  pontos: 51
+  desempate: false
+  sujeito: familia
+  cobertura: valida
+  fonte: CADUNICO
+  campo: COD_EST_CADASTRAL_FAM
+  regra: cadunico_inscrita
+  nota: Presenca da familia na base com cadastro em estado ativo.
+- perg_id: 31
+  ich_perg_id: 288
+  texto: A criança é público-alvo da educação especial?
+  pontos: 25
+  desempate: false
+  sujeito: crianca
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: 'CadUnico traz deficiencia, mas ''publico-alvo da educacao especial'' e conceito mais estreito
+    (LDB/PNEE: deficiencia, TEA, altas habilidades). Usar deficiencia como prova responderia pergunta
+    diferente da que a regua faz.'
+- perg_id: 6
+  ich_perg_id: 289
+  texto: Faz parte do programa bolsa família ou possui Cartão Carioca?
+  pontos: 2
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: Recebimento do Bolsa Familia esta na Folha PBF, nao no CadUnico (que da elegibilidade por renda,
+    nao recebimento). Cartao Carioca e cadastro municipal proprio.
+- perg_id: 17
+  ich_perg_id: 290
+  texto: A criança e/ou familiar do seu convívio diário é vitima de violência doméstica?
+  pontos: 4
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: Exigiria CREAS/SUAS ou SINAN. Dado sensivel, sem base disponivel.
+- perg_id: 20
+  ich_perg_id: 291
+  texto: A criança pertence a família monoparental?
+  pontos: 4
+  desempate: false
+  sujeito: familia
+  cobertura: valida
+  fonte: CADUNICO
+  campo: COD_PARENTESCO_RF_PESSOA
+  regra: familia_monoparental
+  nota: 'Composicao do nucleo: um unico responsavel adulto no domicilio.'
+- perg_id: 25
+  ich_perg_id: 280
+  texto: Candidato tem pais ou responsáveis deficientes ?
+  pontos: 3
+  desempate: false
+  sujeito: familia
+  cobertura: valida
+  fonte: CADUNICO
+  campo: COD_DEFICIENCIA_MEMB
+  regra: responsavel_deficiente
+  nota: Deficiencia declarada no CadUnico para o responsavel familiar.
+- perg_id: 18
+  ich_perg_id: 281
+  texto: A criança e/ou alguém do núcleo familiar apresentam doenças crônicas graves?
+  pontos: 3
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: Exigiria bases do SUS. Dado sensivel de saude (LGPD art. 11), sem base disponivel.
+- perg_id: 16
+  ich_perg_id: 282
+  texto: Existe algum membro do núcleo familiar que faz uso abusivo de drogas e/ou alcoól?
+  pontos: 2
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: Exigiria CAPS-AD/SUS. Dado sensivel de saude (LGPD art. 11), sem base disponivel.
+- perg_id: 12
+  ich_perg_id: 283
+  texto: Existe algum membro do núcleo familiar que é presidiário ou ex-presidiário nos últimos 5 anos?
+  pontos: 2
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: Exigiria SEAP-RJ/SISDEPEN. Dado sensivel, sem base disponivel.
+- perg_id: 23
+  ich_perg_id: 284
+  texto: O candidato é refugiado?
+  pontos: 2
+  desempate: false
+  sujeito: familia
+  cobertura: sem_fonte
+  fonte: null
+  campo: null
+  regra: null
+  nota: CadUnico traz pais de origem, que nao e condicao de refugio. O status e do CONARE/PF e protegido
+    por sigilo (Lei 9.474/1997, arts. 20 e 23).
+- perg_id: 27
+  ich_perg_id: 285
+  texto: Criança aguardou em fila de espera no ano anterior sem ter sido atendida?
+  pontos: 2
+  desempate: false
+  sujeito: crianca
+  cobertura: valida
+  fonte: SME_INTERNO
+  campo: aluno_anon
+  regra: fila_ano_anterior
+  nota: 'Historico da propria SME: inscricao no ano anterior sem atendimento.'
+- perg_id: 29
+  ich_perg_id: 286
+  texto: O Candidato possui irmão matriculado na rede pública ou parceria?
+  pontos: 0
+  desempate: true
+  sujeito: crianca
+  cobertura: valida
+  fonte: SME_INTERNO
+  campo: responsavel_anon
+  regra: irmao_na_rede
+  nota: 'Historico da propria SME: irmao com matricula ativa na rede.'
+- perg_id: 30
+  ich_perg_id: 287
+  texto: O Candidato possui pais ou responsáveis com idade menor que 18 anos?
+  pontos: 0
+  desempate: true
+  sujeito: familia
+  cobertura: valida
+  fonte: CADUNICO
+  campo: DTA_NASC_PESSOA
+  regra: responsavel_menor_18
+  nota: Idade do responsavel na data de abertura do processo.

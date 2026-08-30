@@ -3,3 +3,9 @@
 # as copias .csv ficam de fora do controle de versao.
 Bases IC_ ClassificadoseFila/01_QueryA_InscricoesPorAno.csv
 Bases IC_ ClassificadoseFila/02_QueryB_RespostasSocioEconomicas.csv
+
+# Bases sinteticas geradas: reproduziveis pelo gerador com a seed do config,
+# e grandes demais para versionar. Amostras pequenas ficam em validacao/amostras/.
+dados/
+__pycache__/
+*.pyc

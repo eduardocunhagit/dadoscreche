@@ -1,0 +1,60 @@
+# Parametros da geracao das bases sinteticas de CadUnico e RAIS.
+#
+# AVISO SOBRE AS TAXAS: os valores abaixo sao ESTIPULADOS, nao medidos. Nao ha
+# publicacao oficial cruzando a fila de creche do Rio com o CadUnico, e inventar
+# uma citacao seria pior do que assumir a estipulacao. Eles foram escolhidos para
+# produzir os quatro quadrantes em proporcoes que exercitem a ferramenta, nao para
+# reproduzir a realidade.
+#
+# O que E medido dos dados reais deste repositorio (e portanto nao aparece aqui):
+# quem declarou o que, quantas criancas cada responsavel tem, CEP, bairro, e o
+# reaparecimento de familias entre anos. A geracao condiciona nesses fatos reais.
+#
+# Com dados reais, `cobertura_declarantes` e `cobertura_nao_declarantes` deixam de
+# ser parametro: viram medida.
+
+seed: 20260830
+anos: [2021, 2022, 2023, 2024, 2025]
+
+cadunico:
+  # P(familia esta no CadUnico | declarou que esta)
+  # Abaixo de 1 de proposito: gera o quadrante da divergencia, onde a base nao
+  # confirma o que a familia declarou e o caso vai a revisao humana.
+  cobertura_declarantes: 0.88
+
+  # P(familia esta no CadUnico | NAO declarou)
+  # Este e o quadrante da busca ativa: familia que tem direito ao criterio e nao
+  # pediu. Sem ele a ferramenta so confirmaria o que ja foi declarado.
+  cobertura_nao_declarantes: 0.17
+
+  # P(familia sai do CadUnico de um ano para o outro), aplicada aos reaparecimentos
+  rotatividade_anual: 0.06
+
+  # Dos que estao na base, fracao com COD_EST_CADASTRAL_FAM em estado ativo
+  fracao_cadastro_ativo: 0.93
+
+  # Coerencia com o que a familia declarou nos criterios que o CadUnico responde.
+  # Abaixo de 1 porque cadastro desatualizado e a principal causa real de divergencia.
+  coerencia_monoparental: 0.90
+  coerencia_deficiencia: 0.85
+
+  renda_per_capita:          # em reais, para VLR_RENDA_MEDIA_FAM
+    mediana: 340
+    dispersao_log: 0.85
+
+rais:
+  # P(responsavel com ao menos um vinculo formal no ano). Estipulado baixo de
+  # proposito: informalidade e alta na populacao da fila de creche, e uma taxa
+  # otimista esconderia justamente a limitacao da RAIS como fonte.
+  cobertura_vinculo: 0.34
+
+  # P(vinculo ativo em 31/12 | tem vinculo no ano)
+  fracao_ativo_31dez: 0.72
+
+  salario_mensal:            # multiplos do salario minimo
+    mediana_sm: 1.4
+    dispersao_log: 0.55
+
+  # Estabelecimentos sinteticos a criar; os CEPs saem da distribuicao real de CEPs
+  # do municipio observada na QueryA e na QueryD.
+  n_estabelecimentos: 12000
