@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/core/auth";
 import { obterCriancaComContatos, criancaNoEscopoDoUsuario } from "@/modules/perfil-contatos";
-import { CANAIS_CONTATO_LABEL } from "@/core/domain/constants";
+import { listarInscricoesDaCrianca } from "@/modules/alocacao";
+import { CANAIS_CONTATO_LABEL, type EstadoOpcao } from "@/core/domain/constants";
 import { Cartao, CartaoCorpo, CartaoTitulo } from "@/core/ui/Card";
-import { Selo } from "@/core/ui/Badge";
+import { Selo, SeloEstadoOpcao } from "@/core/ui/Badge";
 import { Botao } from "@/core/ui/Button";
 import { Campo } from "@/core/ui/Input";
 import { FormularioContato } from "./FormularioContato";
@@ -25,6 +27,7 @@ export default async function PaginaCrianca(props: PageProps<"/meus-filhos/[cria
   const podeAcessar = await criancaNoEscopoDoUsuario(criancaId, user);
   if (!podeAcessar) redirect("/");
 
+  const inscricoes = await listarInscricoesDaCrianca(criancaId);
   const podeEditar = user.papel === "RESPONSAVEL" || user.papel.startsWith("SERVIDOR");
   const contatosAtivos = crianca.contatos.filter((c) => c.ativo);
   const temAlternativo = contatosAtivos.some((c) => c.papel === "ALTERNATIVO");
@@ -39,6 +42,46 @@ export default async function PaginaCrianca(props: PageProps<"/meus-filhos/[cria
         <h1 className="font-serif text-2xl text-ink">{crianca.nomeExibicao}</h1>
         <p className="mt-1 text-sm text-muted">Nascimento: {crianca.nascimentoAnoMes}</p>
       </div>
+
+      <Cartao>
+        <CartaoTitulo className="flex items-center justify-between">
+          <span>Inscrições</span>
+          {podeEditar && (
+            <Link href={`/meus-filhos/${criancaId}/inscrever`} className="text-sm font-medium text-accent hover:underline">
+              + Nova inscrição
+            </Link>
+          )}
+        </CartaoTitulo>
+        <CartaoCorpo className="space-y-4">
+          {inscricoes.length === 0 && (
+            <p className="text-sm text-muted">
+              Nenhuma inscrição ainda.{" "}
+              {podeEditar && (
+                <Link href={`/meus-filhos/${criancaId}/inscrever`} className="font-medium text-accent hover:underline">
+                  Escolher creches
+                </Link>
+              )}
+            </p>
+          )}
+          {inscricoes.map((inscricao) => (
+            <div key={inscricao.id} className="rounded-md border border-line p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                Processo {inscricao.processo.ano} — inscrita em {formatarData(inscricao.dataCriacao)}
+              </p>
+              <ul className="space-y-1.5">
+                {inscricao.opcoes.map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="font-mono text-xs text-faint">{o.ordem}ª</span>
+                    <span className="text-ink">{o.unidade.nome}</span>
+                    <span className="text-muted">— {o.grupamento} · {o.turno}</span>
+                    <SeloEstadoOpcao estado={o.estado as EstadoOpcao} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </CartaoCorpo>
+      </Cartao>
 
       <Cartao>
         <CartaoTitulo>Contatos cadastrados</CartaoTitulo>

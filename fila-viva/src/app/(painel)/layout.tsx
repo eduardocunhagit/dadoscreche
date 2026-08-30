@@ -37,7 +37,10 @@ export default async function LayoutDoPainel({ children }: LayoutProps<"/">) {
           ))}
         </nav>
 
-        <div className="border-t border-line px-5 py-4">
+        {/* pb-16: o indicador de dev do Next.js flutua no canto inferior
+            esquerdo e cobre este rodapé sem essa folga — só em `next dev`,
+            nunca em produção, mas atrapalha demo/teste se não compensar. */}
+        <div className="border-t border-line px-5 pb-16 pt-4">
           <p className="text-sm font-medium text-ink">{session.user.name}</p>
           <p className="mb-3 text-xs text-muted">{PAPEIS_USUARIO_LABEL[session.user.papel]}</p>
           <form action={sair}>

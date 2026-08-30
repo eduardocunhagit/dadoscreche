@@ -22,11 +22,18 @@ Não precisa de Docker nem de Postgres — o banco de desenvolvimento é um
 arquivo SQLite (`dev.db`), criado na hora.
 
 ```bash
-npm install
-npm run db:migrate     # cria dev.db e aplica o schema
-npm run db:seed        # importa dados REAIS das CSVs do desafio + contas de demo
-npm run dev             # http://localhost:3000
+npm install    # cria o .env sozinho (postinstall) — ver nota abaixo
+npm run setup  # gera o Prisma client, aplica as migrations e semeia — ~30s
+npm run dev    # http://localhost:3000
 ```
+
+> **`.env`**: o `npm install` roda `scripts/setup-env.cjs` automaticamente
+> e cria `fila-viva/.env` com `DATABASE_URL` e um `AUTH_SECRET` aleatório —
+> não precisa criar isso à mão. Ele só faz isso se o arquivo ainda não
+> existir, então rodar `npm install` de novo não sobrescreve nada. Se
+> alguém acabar sem esse arquivo por qualquer motivo, o sintoma é login
+> quebrando com `"There was a problem with the server configuration"` —
+> rode `node scripts/setup-env.cjs` pra corrigir.
 
 Contas de demonstração (senha `demo1234` para todas):
 
@@ -37,7 +44,7 @@ Contas de demonstração (senha `demo1234` para todas):
 | `unidade@filaviva.rio` | Servidor da unidade | Uma unidade específica |
 | `responsavel@filaviva.rio` | Responsável | As próprias crianças |
 
-Para recomeçar do zero: `npm run db:reset && npm run db:seed`.
+Para recomeçar do zero: `npm run db:reset && npm run db:seed` (o `db:reset` some com todos os dados locais — se um agente de IA rodar isso, o Prisma vai pedir sua confirmação antes).
 
 ### O que o seed importa
 
@@ -65,9 +72,10 @@ sintéticos, claramente marcados como tal no código do seed.
 | `npm run dev` | Sobe o site em desenvolvimento |
 | `npm run build` | Build de produção |
 | `npm test` | Roda os testes (o motor de alocação é o mais importante) |
-| `npm run db:migrate` | Aplica migrations do Prisma |
-| `npm run db:seed` | Popula com dados reais + contas de demo |
-| `npm run db:reset` | Apaga e recria o banco do zero |
+| `npm run setup` | Tudo de uma vez: gera o client, aplica migrations, semeia |
+| `npm run db:migrate` | Só aplica migrations do Prisma |
+| `npm run db:seed` | Só popula com dados reais + contas de demo (~30s) |
+| `npm run db:reset` | Apaga e recria o banco do zero (pede confirmação se rodado por um agente de IA) |
 | `npx tsx scripts/simulador.ts` | Reprocessa a Query A real e mede o tamanho do problema que o Eixo 2 resolve — roda sem precisar do banco |
 
 ## O simulador — a evidência para o pitch
@@ -90,14 +98,27 @@ imprime, sobre a base real do desafio:
 - Quantos cadastros têm um estado inconsistente sem sinalização hoje
   (668) — o gap nº2 do briefing.
 
+## Fluxo de inscrição — onde a família escolhe a creche
+
+`/meus-filhos/[criancaId]/inscrever`: a família busca unidades por nome ou
+bairro, escolhe até 5 em ordem de preferência (reordena, troca grupamento e
+turno por opção), e confirma. Cria a `Inscricao` e as `Opcao` reais, todas
+`NA_FILA` — a partir daí é o motor de alocação (`/fila`) que processa. Um
+botão "+ Nova inscrição" aparece no perfil de cada criança, e o mesmo
+perfil já lista as inscrições existentes com o estado de cada opção.
+
+O que essa tela **não** faz ainda: aplicar a pontuação da Query C no
+momento da inscrição (o questionário socioeconômico) — a fila hoje ordena
+só por `dataCriacao`, não pela régua de pontos do processo. Ver "O que
+ainda falta" abaixo.
+
 ## O que ainda falta (por fase — ver o plano publicado)
 
-- **Fase 3** — fluxo de inscrição em si (as 5 opções sendo escolhidas) e
-  aplicação da pontuação no momento da inscrição. O motor (Fase 4) já lê e
-  grava o estado das opções; falta a tela que cria uma opção nova.
-  Também não fizemos a UI de gestão do catálogo de perguntas.
-- **Fase 3B** — importar a Query B se algum módulo precisar reconstituir
-  o perfil de vulnerabilidade de uma inscrição.
+- **Fase 3B** — questionário socioeconômico no momento da inscrição e
+  aplicação da régua de pontuação (Query C) pra ordenar a fila por pontos,
+  não só por data. Também não fizemos a UI de gestão do catálogo de
+  perguntas. Precisaria importar a Query B se algum módulo quiser
+  reconstituir o perfil de vulnerabilidade de uma inscrição já existente.
 - Convocação de verdade (Eixo 3) — este projeto só abre a **oferta** e
   grava o relógio; disparar WhatsApp/SMS/e-mail de verdade é o módulo de
   outra pessoa do time (ver `EXTENDING.md`).

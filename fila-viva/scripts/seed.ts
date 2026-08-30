@@ -19,8 +19,20 @@ import { createGunzip } from "node:zlib";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
 import bcrypt from "bcryptjs";
+import { createId } from "@paralleldrive/cuid2";
 import { prisma } from "../src/core/db/client";
 import { SITUACAO_ORIGINAL_PARA_ESTADO, type EstadoOpcao } from "../src/core/domain/constants";
+
+// SQLite aceita até ~32.766 parâmetros por statement — um lote de 2.000
+// linhas de até 10 colunas fica bem folgado disso e ainda evita segurar
+// tudo numa única query gigante.
+const TAMANHO_DO_LOTE = 2000;
+
+async function emLotes<T>(dados: T[], inserir: (lote: T[]) => Promise<unknown>) {
+  for (let i = 0; i < dados.length; i += TAMANHO_DO_LOTE) {
+    await inserir(dados.slice(i, i + TAMANHO_DO_LOTE));
+  }
+}
 
 const RAIZ_DADOS = path.resolve(__dirname, "..", "..");
 const PASTA_IC = path.join(RAIZ_DADOS, "Bases IC_ ClassificadoseFila");
@@ -180,117 +192,161 @@ async function importarPerguntas(processos: Map<number, { id: string }>) {
   return total;
 }
 
+// Todo o trabalho pesado fica em memória (Maps/arrays comuns) enquanto o
+// CSV é lido; o banco só é tocado depois, em lotes de `TAMANHO_DO_LOTE`.
+// É essa troca — de ~40 mil idas ao banco pra ~30 — que faz o seed cair de
+// vinte e poucos minutos pra menos de um. Ver README, seção "O que o seed
+// importa", para o motivo de não fazer isso linha a linha desde o início.
 async function importarInscricoes(processos: Map<number, { id: string; ativarMotor: boolean }>, polos: Map<number, string>) {
   const processo2025 = processos.get(ANO_SEED)!;
 
-  const criancaPorAnon = new Map<string, string>();
-  const responsavelPorAnon = new Map<string, string>();
-  const inscricaoPorChave = new Map<string, string>();
+  const responsaveisPorAnon = new Map<string, string>();
+  const responsaveisNovos: { id: string; responsavelAnon: string; nomeExibicao: string }[] = [];
 
-  let opcoesImportadas = 0;
+  const criancasPorAnon = new Map<string, string>();
+  const criancasNovas: {
+    id: string;
+    alunoAnon: string;
+    nomeExibicao: string;
+    sexo: string;
+    nascimentoAnoMes: string;
+    responsavelPrincipalId: string;
+  }[] = [];
+
+  const inscricoesPorChave = new Map<string, string>();
+  const inscricoesNovas: {
+    id: string;
+    processoId: string;
+    poloId: string;
+    iplId: number;
+    criancaId: string;
+    responsavelId: string;
+    dataCriacao: Date;
+    cepResponsavel: string | null;
+    bairroResponsavel: string | null;
+  }[] = [];
+
+  const opcoesNovas: {
+    id: string;
+    inscricaoId: string;
+    ordem: number;
+    unidadeEscCodigo: string;
+    grupamento: string;
+    turno: string;
+    estado: EstadoOpcao;
+    situacaoOriginal: string;
+    ofertaAbertaEm: Date | null;
+    ofertaPrazo: Date | null;
+  }[] = [];
+
+  const eventosNovos: {
+    opcaoId: string;
+    estadoAnterior: string;
+    estadoNovo: string;
+    autorPapel: string;
+    observacao: string;
+    quando: Date;
+  }[] = [];
+
+  function idDoResponsavel(anon: string): string {
+    let id = responsaveisPorAnon.get(anon);
+    if (!id) {
+      id = createId();
+      responsaveisPorAnon.set(anon, id);
+      responsaveisNovos.push({ id, responsavelAnon: anon, nomeExibicao: `Responsável ${anon.replace("responsavel_", "")}` });
+    }
+    return id;
+  }
+
   const unidadesConhecidas = new Set((await prisma.unidade.findMany({ select: { escCodigo: true } })).map((u) => u.escCodigo));
 
-  await paraCadaLinhaCsvGz(
-    path.join(PASTA_IC, "01_QueryA_InscricoesPorAno.csv.gz"),
-    async (l) => {
-      const ano = Number(l.ano);
-      const plmId = Number(l.plm_id);
-      if (ano !== ANO_SEED || !POLOS_SEED.includes(plmId)) return;
-      if (!unidadesConhecidas.has(l.unidade)) return; // proteção — todas deveriam casar
+  await paraCadaLinhaCsvGz(path.join(PASTA_IC, "01_QueryA_InscricoesPorAno.csv.gz"), async (l) => {
+    const ano = Number(l.ano);
+    const plmId = Number(l.plm_id);
+    if (ano !== ANO_SEED || !POLOS_SEED.includes(plmId)) return;
+    if (!unidadesConhecidas.has(l.unidade)) return; // proteção — todas deveriam casar
 
-      let criancaId = criancaPorAnon.get(l.aluno_anon);
-      if (!criancaId) {
-        const c = await prisma.crianca.create({
-          data: {
-            alunoAnon: l.aluno_anon,
-            nomeExibicao: `Criança ${l.aluno_anon.replace("aluno_", "")}`,
-            sexo: l.sexo_crianca,
-            nascimentoAnoMes: l.nascimento_aluno_anomes,
-            responsavelPrincipalId: await obterOuCriarResponsavel(l.responsavel_anon, responsavelPorAnon),
-          },
-        });
-        criancaId = c.id;
-        criancaPorAnon.set(l.aluno_anon, criancaId);
-      }
+    let criancaId = criancasPorAnon.get(l.aluno_anon);
+    if (!criancaId) {
+      criancaId = createId();
+      criancasPorAnon.set(l.aluno_anon, criancaId);
+      criancasNovas.push({
+        id: criancaId,
+        alunoAnon: l.aluno_anon,
+        nomeExibicao: `Criança ${l.aluno_anon.replace("aluno_", "")}`,
+        sexo: l.sexo_crianca,
+        nascimentoAnoMes: l.nascimento_aluno_anomes,
+        responsavelPrincipalId: idDoResponsavel(l.responsavel_anon),
+      });
+    }
 
-      const chaveInscricao = `${l.prm_id}-${l.plm_id}-${l.ipl_id}`;
-      let inscricaoId = inscricaoPorChave.get(chaveInscricao);
-      if (!inscricaoId) {
+    const chaveInscricao = `${l.prm_id}-${l.plm_id}-${l.ipl_id}`;
+    let inscricaoId = inscricoesPorChave.get(chaveInscricao);
+    if (!inscricaoId) {
+      inscricaoId = createId();
+      inscricoesPorChave.set(chaveInscricao, inscricaoId);
+      inscricoesNovas.push({
+        id: inscricaoId,
+        processoId: processo2025.id,
+        poloId: polos.get(plmId)!,
+        iplId: Number(l.ipl_id),
+        criancaId,
         // Não confia que o responsável já foi criado junto com a criança:
         // a base real tem casos de reinscrição em que o mesmo aluno_anon
         // aparece sob um ipl_id novo, às vezes com responsavel_anon
-        // diferente — obterOuCriarResponsavel é idempotente, então chamar
-        // de novo aqui é seguro e barato (cache em memória).
-        const responsavelId = await obterOuCriarResponsavel(l.responsavel_anon, responsavelPorAnon);
-        const inscricao = await prisma.inscricao.create({
-          data: {
-            processoId: processo2025.id,
-            poloId: polos.get(plmId)!,
-            iplId: Number(l.ipl_id),
-            criancaId,
-            responsavelId,
-            dataCriacao: new Date(l.data_criacao),
-            cepResponsavel: nulo(l.CEP),
-            bairroResponsavel: nulo(l.bairro),
-          },
-        });
-        inscricaoId = inscricao.id;
-        inscricaoPorChave.set(chaveInscricao, inscricaoId);
-      }
-
-      const estado = (SITUACAO_ORIGINAL_PARA_ESTADO[l.situacao] ?? "NA_FILA") as EstadoOpcao;
-      const emCiclo = estado === "OFERTADA";
-      // A extração histórica não guarda QUANDO uma opção mudou de estado
-      // (é o gap nº1 do briefing). Pra opções que já chegaram ofertadas na
-      // importação, sintetiza um instante recente só pra o painel /fila
-      // ter algo pra mostrar — deixa isso claro no evento abaixo.
-      const ofertaAbertaEm = emCiclo ? diasAtras(Math.floor(Math.random() * 6)) : null;
-
-      const opcao = await prisma.opcao.create({
-        data: {
-          inscricaoId,
-          ordem: Number(l.opcao),
-          unidadeEscCodigo: l.unidade,
-          grupamento: l.grupamento.trim(),
-          turno: l.horario,
-          estado,
-          situacaoOriginal: l.situacao,
-          ofertaAbertaEm,
-          ofertaPrazo: ofertaAbertaEm ? new Date(ofertaAbertaEm.getTime() + 6 * 24 * 60 * 60 * 1000) : null,
-        },
+        // diferente — idDoResponsavel é idempotente por anon, então chamar
+        // de novo aqui é seguro.
+        responsavelId: idDoResponsavel(l.responsavel_anon),
+        dataCriacao: new Date(l.data_criacao),
+        cepResponsavel: nulo(l.CEP),
+        bairroResponsavel: nulo(l.bairro),
       });
-
-      await prisma.ofertaEvento.create({
-        data: {
-          opcaoId: opcao.id,
-          estadoAnterior: "NA_FILA",
-          estadoNovo: estado,
-          autorPapel: "SISTEMA",
-          observacao: "Estado inicial importado da extração 2021-2025 (sem histórico real de transição).",
-          quando: ofertaAbertaEm ?? new Date(l.data_criacao),
-        },
-      });
-
-      opcoesImportadas++;
     }
-  );
+
+    const estado = (SITUACAO_ORIGINAL_PARA_ESTADO[l.situacao] ?? "NA_FILA") as EstadoOpcao;
+    const emCiclo = estado === "OFERTADA";
+    // A extração histórica não guarda QUANDO uma opção mudou de estado (é
+    // o gap nº1 do briefing). Pra opções que já chegaram ofertadas na
+    // importação, sintetiza um instante recente só pra o painel /fila ter
+    // algo pra mostrar — deixa isso claro no evento abaixo.
+    const ofertaAbertaEm = emCiclo ? diasAtras(Math.floor(Math.random() * 6)) : null;
+
+    const opcaoId = createId();
+    opcoesNovas.push({
+      id: opcaoId,
+      inscricaoId,
+      ordem: Number(l.opcao),
+      unidadeEscCodigo: l.unidade,
+      grupamento: l.grupamento.trim(),
+      turno: l.horario,
+      estado,
+      situacaoOriginal: l.situacao,
+      ofertaAbertaEm,
+      ofertaPrazo: ofertaAbertaEm ? new Date(ofertaAbertaEm.getTime() + 6 * 24 * 60 * 60 * 1000) : null,
+    });
+
+    eventosNovos.push({
+      opcaoId,
+      estadoAnterior: "NA_FILA",
+      estadoNovo: estado,
+      autorPapel: "SISTEMA",
+      observacao: "Estado inicial importado da extração 2021-2025 (sem histórico real de transição).",
+      quando: ofertaAbertaEm ?? new Date(l.data_criacao),
+    });
+  });
+
+  await emLotes(responsaveisNovos, (lote) => prisma.responsavel.createMany({ data: lote }));
+  await emLotes(criancasNovas, (lote) => prisma.crianca.createMany({ data: lote }));
+  await emLotes(inscricoesNovas, (lote) => prisma.inscricao.createMany({ data: lote }));
+  await emLotes(opcoesNovas, (lote) => prisma.opcao.createMany({ data: lote }));
+  await emLotes(eventosNovos, (lote) => prisma.ofertaEvento.createMany({ data: lote }));
 
   return {
-    inscricoes: inscricaoPorChave.size,
-    opcoes: opcoesImportadas,
-    criancas: criancaPorAnon.size,
-    responsaveis: responsavelPorAnon.size,
+    inscricoes: inscricoesNovas.length,
+    opcoes: opcoesNovas.length,
+    criancas: criancasNovas.length,
+    responsaveis: responsaveisNovos.length,
   };
-}
-
-async function obterOuCriarResponsavel(anon: string, cache: Map<string, string>): Promise<string> {
-  const existente = cache.get(anon);
-  if (existente) return existente;
-  const r = await prisma.responsavel.create({
-    data: { responsavelAnon: anon, nomeExibicao: `Responsável ${anon.replace("responsavel_", "")}` },
-  });
-  cache.set(anon, r.id);
-  return r.id;
 }
 
 // ---------------------------------------------------------------------------
@@ -305,50 +361,59 @@ function telefoneFalsoDeterministico(semente: string, sufixo = 0) {
 
 async function semearContatos() {
   const criancas = await prisma.crianca.findMany({ select: { id: true, alunoAnon: true } });
-  let total = 0;
 
-  for (let i = 0; i < criancas.length; i++) {
-    const c = criancas[i];
+  const contatosNovos: {
+    criancaId: string;
+    papel: string;
+    nomeContato?: string;
+    parentesco?: string;
+    canal: string;
+    valor: string;
+    ordemTentativa: number;
+    consentimentoEm?: Date;
+    verificadoEm: Date | null;
+  }[] = [];
+  const semAlternativoIds: string[] = [];
 
-    await prisma.contato.create({
-      data: {
-        criancaId: c.id,
-        papel: "RESPONSAVEL",
-        canal: "WHATSAPP",
-        valor: telefoneFalsoDeterministico(c.alunoAnon),
-        ordemTentativa: 1,
-        verificadoEm: i % 3 === 0 ? diasAtras(10) : null,
-      },
+  criancas.forEach((c, i) => {
+    contatosNovos.push({
+      criancaId: c.id,
+      papel: "RESPONSAVEL",
+      canal: "WHATSAPP",
+      valor: telefoneFalsoDeterministico(c.alunoAnon),
+      ordemTentativa: 1,
+      verificadoEm: i % 3 === 0 ? diasAtras(10) : null,
     });
-    total++;
 
     // Cerca de 60% ganham contato alternativo — o resto fica em estados
     // variados (declarado "sem contato" ou simplesmente pendente) para a
     // tela de perfil mostrar todos os casos reais de uso.
     if (i % 5 < 3) {
-      await prisma.contato.create({
-        data: {
-          criancaId: c.id,
-          papel: "ALTERNATIVO",
-          nomeContato: ["Avó", "Tio", "Vizinha", "Madrinha"][i % 4],
-          parentesco: ["Avó", "Tio", "Vizinha", "Madrinha"][i % 4],
-          canal: "TELEFONE",
-          valor: telefoneFalsoDeterministico(c.alunoAnon, 17),
-          ordemTentativa: 2,
-          consentimentoEm: diasAtras(30),
-          verificadoEm: i % 4 === 0 ? diasAtras(200) : null, // alguns vencidos, pra fila de revalidação
-        },
+      contatosNovos.push({
+        criancaId: c.id,
+        papel: "ALTERNATIVO",
+        nomeContato: ["Avó", "Tio", "Vizinha", "Madrinha"][i % 4],
+        parentesco: ["Avó", "Tio", "Vizinha", "Madrinha"][i % 4],
+        canal: "TELEFONE",
+        valor: telefoneFalsoDeterministico(c.alunoAnon, 17),
+        ordemTentativa: 2,
+        consentimentoEm: diasAtras(30),
+        verificadoEm: i % 4 === 0 ? diasAtras(200) : null, // alguns vencidos, pra fila de revalidação
       });
-      total++;
     } else if (i % 5 === 4) {
-      await prisma.crianca.update({
-        where: { id: c.id },
-        data: { semContatoAlternativoDeclarado: true, semContatoAlternativoDeclaradoEm: diasAtras(5) },
-      });
+      semAlternativoIds.push(c.id);
     }
-  }
+  });
 
-  return total;
+  await emLotes(contatosNovos, (lote) => prisma.contato.createMany({ data: lote }));
+  await emLotes(semAlternativoIds, (lote) =>
+    prisma.crianca.updateMany({
+      where: { id: { in: lote } },
+      data: { semContatoAlternativoDeclarado: true, semContatoAlternativoDeclaradoEm: diasAtras(5) },
+    })
+  );
+
+  return contatosNovos.length;
 }
 
 async function criarContas(polos: Map<number, string>) {
