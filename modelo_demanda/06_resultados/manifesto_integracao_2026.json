@@ -1,0 +1,36 @@
+{
+  "created_at_utc": "2026-08-30T17:30:14.721973+00:00",
+  "estimand": "primeira opcao por crianca em 2026, por unidade e turno",
+  "territorial_envelope": "PPML-FE bairro x grupamento; persistencia como cenario",
+  "choice_distribution": "conditional_logit_full treinado em 2021-2025",
+  "competition": "distancia geografica e co-selecao historica",
+  "alternatives_2026": "alternativas unidade-turno ativas em 2025",
+  "children_training": 296084,
+  "markets_2026": 491,
+  "alternatives_2026_count": 872,
+  "origin_geo_coverage_2026": 0.9470468431771895,
+  "unit_context_coverage": 0.9808612440191388,
+  "totals": {
+    "ppml_envelope": 66800.91415408079,
+    "persistencia_envelope": 59717.62982028024,
+    "ppml_integrado": 66800.91415408079,
+    "persistencia_integrada": 59717.62982028024
+  },
+  "envelope_input_sha256": "790990489681221ae2aa5cc29a918b30999674edc85b093f0d92cc75993c9e99",
+  "historico_bruto_2025_sha256": "eb8814df75800f260a7b6d7b2e3544b3ccb57dec4fc943d4ca310c7204fa98aa",
+  "notes": [
+    "CAGED feminino permanece sensibilidade OOS de 2025 e não é extrapolado para 2026.",
+    "Limites p025/p975 pertencem ao envelope territorial e condicionam-se às participações pontuais do modelo de escolha.",
+    "Matrículas e fila são contexto; não são capacidade física."
+  ],
+  "audit_choice_model": {
+    "n_choice_episodes": 296084,
+    "n_markets": 2414,
+    "n_active_alternative_cells": 8362,
+    "n_panel_rows": 1346523,
+    "origin_geo_coverage": 0.9854635846584078,
+    "unit_geo_official_share": 0.9848122458741928,
+    "n_partner_units": 350,
+    "partner_geo_official_share": 0.9350718467269824
+  }
+}
